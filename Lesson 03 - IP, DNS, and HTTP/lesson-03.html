@@ -1,0 +1,266 @@
+<h1 id="lecture-1-fundamentals-of-ip-dns-and-http">Lecture 1:
+Fundamentals of IP, DNS, and HTTP</h1>
+<h2 id="introduction">Introduction</h2>
+<p>This lecture covers three core technologies that make the web
+possible: IP addresses, DNS (Domain Name System), and HTTP (Hypertext
+Transfer Protocol). These technologies work together to enable every web
+interaction, from loading a simple webpage to streaming video
+content.</p>
+<h2 id="ip-addresses-the-internets-street-addresses">1. IP Addresses:
+The Internet’s Street Addresses</h2>
+<h3 id="what-are-ip-addresses">What are IP Addresses?</h3>
+<p>Just as physical addresses identify buildings, IP addresses identify
+devices on the internet. Every device needs a unique IP address to
+communicate with other devices. For example, <code>45.79.112.203</code>
+is an IP address that identifies a specific server on the internet.</p>
+<h3 id="demonstration">Demonstration</h3>
+<p>Let’s see IP addresses in action by connecting to
+<code>45.79.112.203</code>. This IP address is the server that runs <a
+href="https://tcpbin.com">tcpbin.com</a>, which is an echo service that
+returns any text you send to it. In a terminal, try running the
+following:</p>
+<pre><code>nc 45.79.112.203 4242</code></pre>
+<p>This will open a connection to the remote server. Type some text and
+hit “enter”; the text will be sent to tcpbin. Then, tcpbin will reply to
+you with the same text.</p>
+<video autoplay loop controls title="Screen capture of a terminal running &#39;nc tcpbin.com 4242&#39;, sending text and displaying the echoed response">
+<source src="./lec01-tcpbin.mp4" />
+</video>
+<p>Here are the network messages being sent behind the scenes:</p>
+<video autoplay loop controls title="Animated diagram showing the requests and responses that are sent in the above tcpbin demo">
+<source src="./lec01-tcpbin-diagram.mp4" />
+</video>
+<h2 id="dns-the-internets-address-book">2. DNS: The Internet’s Address
+Book</h2>
+<p>While computers work with IP addresses, humans prefer memorable
+names. DNS translates human-friendly domain names (like google.com) into
+IP addresses (like 142.251.46.206). This translation happens
+automatically every time you visit a website.</p>
+<video autoplay loop controls title="Animated diagram shows a client sending a DNS resolution request for &#39;google.com&#39; and receiving a response for the IP &#39;142.251.46.206&#39;">
+<source src="./lec01-dns-basic.mp4" />
+</video>
+<h3 id="how-dns-works">How DNS Works</h3>
+<p>When you type a domain name into your browser, your computer contacts
+a “DNS recursive resolver” to find the corresponding IP address. The
+resolver follows a chain of several “authoratative nameservers.” For
+example, to resolve an IP address for <code>google.com</code>:</p>
+<ol type="1">
+<li>A hardcoded <a href="https://www.iana.org/domains/root/servers">root
+nameserver</a> responds with the IP of a nameserver authorized to
+resolve <code>.com</code> domains</li>
+<li>That nameserver responds with the IP of a nameserver authorized to
+resolve <code>google.com</code> domains</li>
+<li>That nameserver responds with the final IP address for
+<code>google.com</code></li>
+</ol>
+<video autoplay loop controls title="Animated diagram shows a client sending a DNS resolution request for &#39;google.com&#39;. The DNS recursive resolver then queries the root nameserver, .com nameserver, and google.com nameserver.">
+<source src="./lec01-dns-recursive.mp4" />
+</video>
+<h2 id="http-the-webs-spoken-language">3. HTTP: The Web’s Spoken
+Language</h2>
+<p>Once we have resolved the IP address of the server that we wish to
+talk to, we can request web pages, images, and other content from that
+server. However, we need to establish a standard language so that
+communicating machines can understand each other, even if they are run
+by different organizations and using different operating systems and
+browsers.</p>
+<p>HTTP (HyperText Transport Protocol) is a standard protocol that
+defines how web browsers and servers communicate. Proper HTTP
+communication is described by <a
+href="https://www.rfc-editor.org/rfc/rfc9110.html">a lengthy
+specification</a>, but the core of the protocol is very simple to
+understand.</p>
+<h3 id="http-requests">HTTP requests</h3>
+<p>A basic HTTP request has a <em>request line</em>, one or more
+<em>request headers</em>, and then a blank line signalling the end of
+the request. For example:</p>
+<pre><code>GET / HTTP/1.1
+Host: www.google.com
+User-Agent: Mozilla/5.0 (Macintosh; Intel Mac OS X 10.15; rv:133.0) Gecko/20100101 Firefox/133.0
+Accept-Language: en-US,en
+</code></pre>
+<p>The request line specifies: * A <a
+href="https://developer.mozilla.org/en-US/docs/Web/HTTP/Methods"><em>request
+method</em></a>, e.g. GET for fetching data or POST for uploading or
+modifying data * A <em>URL path</em> indicating the resource we are
+requesting * The HTTP protocol version</p>
+<figure>
+<img src="./http-request-line.jpeg"
+alt="Diagram breaking down the components of the request line" />
+<figcaption aria-hidden="true">Diagram breaking down the components of
+the request line</figcaption>
+</figure>
+<p>The <a
+href="https://developer.mozilla.org/en-US/docs/Glossary/Request_header"><em>request
+headers</em></a> are used to indicate supplemental information about the
+request, such as which browser is being used, which language/locale is
+preferred, etc.</p>
+<h3 id="http-responses">HTTP responses</h3>
+<p>The server responds with a status line, headers, and content:</p>
+<pre><code>HTTP/1.1 200 OK
+Content-Type: text/html
+Date: Wed, 11 Dec 2024 03:48:35 GMT
+
+&lt;!doctype html&gt;
+&lt;html&gt;
+  ...
+&lt;/html&gt;</code></pre>
+<p>The <em>response line</em> specifies: * The HTTP protocol version *
+An HTTP <a
+href="https://developer.mozilla.org/en-US/docs/Web/HTTP/Status"><em>status</em></a></p>
+<figure>
+<img src="./http-response-line.jpeg"
+alt="Diagram breaking down the components of the response line" />
+<figcaption aria-hidden="true">Diagram breaking down the components of
+the response line</figcaption>
+</figure>
+<p>Like request headers, the <a
+href="https://developer.mozilla.org/en-US/docs/Glossary/Response_header"><em>response
+headers</em></a> contain metadata about the response.</p>
+<h3 id="observing-http-in-action">Observing HTTP in action</h3>
+<p>Most browsers include tools to view network traffic, such as <a
+href="https://developer.chrome.com/docs/devtools/network">Chrome’s
+DevTools</a>. You can use these tools to view the HTTP requests that
+your browser makes:</p>
+<figure>
+<img src="./chrome-dev-tools.png"
+alt="Screenshot of Chrome DevTools network panel" />
+<figcaption aria-hidden="true">Screenshot of Chrome DevTools network
+panel</figcaption>
+</figure>
+<p>You can also view the raw request and response by sending requests
+using the command-line utility <code>curl</code>:</p>
+<pre><code>$ curl -v https://www.google.com
+&gt; GET / HTTP/2
+&gt; Host: www.google.com
+&gt; User-Agent: curl/8.7.1
+&gt; Accept: */*
+&gt;
+* Request completely sent off
+&lt; HTTP/2 200
+&lt; date: Fri, 13 Dec 2024 00:43:53 GMT
+&lt; expires: -1
+&lt; cache-control: private, max-age=0
+&lt; content-type: text/html; charset=ISO-8859-1
+&lt; content-security-policy-report-only: object-src &#39;none&#39;;base-uri &#39;self&#39;;script-src &#39;nonce-ACpMGlNv3pFD1rpGQgWfIg&#39; &#39;strict-dynamic&#39; &#39;report-sample&#39; &#39;unsafe-eval&#39; &#39;unsafe-inline&#39; https: http:;report-uri https://csp.withgoogle.com/csp/gws/other-hp
+&lt; accept-ch: Sec-CH-Prefers-Color-Scheme
+&lt; p3p: CP=&quot;This is not a P3P policy! See g.co/p3phelp for more info.&quot;
+&lt; server: gws
+&lt; x-xss-protection: 0
+&lt; x-frame-options: SAMEORIGIN
+&lt; set-cookie: AEC=AZ6Zc-XuLZ1Fsh9XHJlpUxu_XBkIdrxJ2tYcTc7xfioKV9su4PAWPTlcBS4; expires=Wed, 11-Jun-2025 00:43:53 GMT; path=/; domain=.google.com; Secure; HttpOnly; SameSite=lax
+&lt; set-cookie: NID=520=n2eoYDYjs-OUxSr3yvGPPaI8_L7EfLZnY3we0inOrimwxwkMj2_mbyA6ykGlHVk2PZBPZ3FvlTzcEFf2R2GfMjy99Z1tX1gYx0dgM4Ng2q33WvZRwqtMJpzWoyG5xeaNiqZ-z_iaIDhNqcMGE3aBZ9GLJweFMPtC8WotyfGpjio47y2GbuaAY5xw4UIJZz5liDRGGyS7HA; expires=Sat, 14-Jun-2025 00:43:53 GMT; path=/; domain=.google.com; HttpOnly
+&lt; alt-svc: h3=&quot;:443&quot;; ma=2592000,h3-29=&quot;:443&quot;; ma=2592000
+&lt; accept-ranges: none
+&lt; vary: Accept-Encoding
+&lt;
+&lt;!doctype html&gt;&lt;html itemscope=&quot;&quot; itemtype=&quot;http://schema.org/WebPage&quot; lang=&quot;en&quot;&gt;&lt;head&gt;&lt;meta content=&quot;Search the world&#39;s information, including webpages, images, videos and more. Google has many special features to help you find exactly what you&#39;re looking for.&quot; name=&quot;description&quot;&gt;
+...</code></pre>
+<p>In fact, since HTTP is based on simple plain text, you can speak it
+to talk directly to servers yourself! Run <code>nc google.com 80</code>
+to open a connection to Google, and then type the following (be sure to
+hit enter <em>twice</em> at the end):</p>
+<pre><code>GET / HTTP/1.1
+Host: www.google.com
+</code></pre>
+<video autoplay loop controls title="Screen recording of sending an HTTP request to Google via nc">
+<source src="./lec01-nc-http.mp4" />
+</video>
+<h3 id="key-characteristics-of-http">Key Characteristics of HTTP</h3>
+<p>In summary, HTTP is: - Simple: based on human-readable text -
+Extensible: can add new headers as needed - Transport agnostic: requires
+only reliable transport - Stateless: each request is independent -
+Servers maintain state through additional mechanisms like cookies - The
+protocol itself doesn’t track state between requests</p>
+<h2 id="putting-it-all-together">Putting It All Together</h2>
+<p>Here’s how these technologies work together when loading a
+webpage:</p>
+<video autoplay loop controls title="Animated diagram illustrating the network requests involved in a full web page load">
+<source src="./lec01-all-together.mp4" />
+</video>
+<ol type="1">
+<li>DNS resolves the domain name to an IP address</li>
+<li>Your browser sends an HTTP request to that IP</li>
+<li>The server returns the HTML content</li>
+<li>Your browser requests additional resources (CSS, images, etc.)</li>
+</ol>
+<h2 id="web-protocol-security">Web protocol security</h2>
+<h3 id="dns-hijacking">DNS Hijacking</h3>
+<p>DNS hijacking occurs when attackers redirect DNS queries to malicious
+servers. For example, an attacker might seek to direct
+<code>bankofamerica.com</code> requests to an IP address under their
+control, instead of the real Bank of America server. There are several
+ways that this attack can happen:</p>
+<ol type="1">
+<li><strong>Compromised DNS recursive resolvers or nameservers:</strong>
+When attackers gain control of DNS infrastructure, they can modify the
+responses sent to users.</li>
+<li><strong>Stolen DNS provider credentials:</strong> Attackers who
+obtain login credentials for DNS management accounts can modify the DNS
+records that the authoratative nameservers send.</li>
+<li><strong>Malware that changes local DNS settings:</strong> Some
+malware specifically targets DNS configuration on users’ local devices.
+By changing these settings, the malware causes infected devices to use
+attacker-controlled DNS recursive resolvers instead of the default
+recursive resolver.</li>
+<li><strong>Compromised routers:</strong> Home and office routers often
+serve as default DNS recursive resolvers for local networks. If
+attackers compromise a router, they can modify its DNS responses.</li>
+</ol>
+<video autoplay loop controls title="Animated diagram illustrating how a DNS hijacking attack works via a hijacked DNS resolver">
+<source src="./lec01-dns-hijacking.mp4" />
+</video>
+<p>Recent studies show the prevalence of these attacks:</p>
+<figure>
+<img src="./dns-attack-headline.png"
+alt="News article from CampusSafety with headline: “86% of Education Industry Experienced DNS Attack in Past Year”" />
+<figcaption aria-hidden="true">News article from CampusSafety with
+headline: “86% of Education Industry Experienced DNS Attack in Past
+Year”</figcaption>
+</figure>
+<p>On the server side, DNS hijacking attacks are best mitigated using <a
+href="https://www.cloudflare.com/learning/dns/dnssec/how-dnssec-works/">DNSSEC</a>.
+On the client side, using <a
+href="https://developers.cloudflare.com/1.1.1.1/encryption/dns-over-https/encrypted-dns-browsers/">DNS
+over HTTPS</a> also helps to mitigate some forms of attack.</p>
+<h3 id="man-in-the-middle-attacks">Man-in-the-Middle Attacks</h3>
+<p>A Man-in-the-Middle (MitM) attack occurs when an attacker secretly
+intercepts and potentially modifies communication between two parties
+who believe they are directly communicating with each other.</p>
+<p>There are several common ways MITM attacks can be executed:</p>
+<ol type="1">
+<li><p><strong>Network eavesdropping:</strong> When users connect to
+public WiFi networks (like in coffee shops or airports), attackers on
+the same network can intercept unencrypted traffic between users and web
+servers.</p></li>
+<li><p><a
+href="https://www.crowdstrike.com/en-us/cybersecurity-101/social-engineering/arp-spoofing/"><strong>ARP
+spoofing:</strong></a> Attackers can send fake Address Resolution
+Protocol (ARP) messages on a local network, tricking devices into
+sending traffic through the attacker’s machine instead of the legitimate
+router.</p></li>
+<li><p><strong>Evil twin attacks:</strong> Attackers set up rogue WiFi
+access points that mimic legitimate ones (e.g., “Starbucks_WiFi” vs the
+real “Starbucks WiFi”), hoping users will connect to their malicious
+network.</p></li>
+</ol>
+<figure>
+<img src="./man-in-the-middle.jpeg"
+alt="Diagram illustrating a man-in-the-middle attack" />
+<figcaption aria-hidden="true">Diagram illustrating a man-in-the-middle
+attack</figcaption>
+</figure>
+<p>HTTP is an <em>unencrypted</em> and <em>unauthenticated</em>
+protocol, so it offers no protections against MitM attacks. Once
+attackers have established themselves in the middle, they can:</p>
+<ul>
+<li>Read sensitive information in unencrypted traffic (passwords, credit
+card numbers, etc.)</li>
+<li>Modify requests or responses to inject malicious content</li>
+<li>Capture authentication tokens or session cookies</li>
+<li>Present fake versions of websites to steal user credentials</li>
+</ul>
+<p>The best protection against MitM attacks is to use <a
+href="https://www.cloudflare.com/learning/ssl/transport-layer-security-tls/">HTTPS/TLS</a>,
+which is an additional layer underneath HTTP that provides encryption
+and identity validation.</p>

