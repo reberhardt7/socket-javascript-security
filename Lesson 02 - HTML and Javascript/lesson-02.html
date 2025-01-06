@@ -1,26 +1,40 @@
-<h1 id="lesson-2-fundamentals-html-and-javascript">Lesson 2:
-Fundamentals: HTML and JavaScript</h1>
-<h2 id="introduction">Introduction</h2>
-<p>The web platform combines several technologies that work together to
-create interactive applications that run in the browser. Before diving
-into web security, we need to understand these core technologies: HTML
-for structure, URLs for addressing resources, CSS for styling, and
-JavaScript for programming behavior.</p>
-<h2 id="html-the-webs-structure">HTML: The Web’s Structure</h2>
-<p>HTML (HyperText Markup Language) provides the structure and content
-of web pages using a system of tags that describe different types of
-content. Each piece of content is wrapped in opening and closing tags
-that describe its role in the document.</p>
-<p>For example, this text document:</p>
-<pre><code>Introduction
+<html>
+<head>
+  <style>
+    body {
+      max-width: 800px;
+      margin-left: auto;
+      margin-right: auto;
+    }
+    img,video {
+      max-width: 100%;
+    }
+  </style>
+</head>
+<body>
+  <h1 id="lesson-2-fundamentals-html-and-javascript">Lesson 2:
+  Fundamentals: HTML and JavaScript</h1>
+  <h2 id="introduction">Introduction</h2>
+  <p>The web platform combines several technologies that work together
+  to create interactive applications that run in the browser. Before
+  diving into web security, we need to understand these core
+  technologies: HTML for structure, URLs for addressing resources, CSS
+  for styling, and JavaScript for programming behavior.</p>
+  <h2 id="html-the-webs-structure">HTML: The Web’s Structure</h2>
+  <p>HTML (HyperText Markup Language) provides the structure and content
+  of web pages using a system of tags that describe different types of
+  content. Each piece of content is wrapped in opening and closing tags
+  that describe its role in the document.</p>
+  <p>For example, this text document:</p>
+  <pre><code>Introduction
 
 This article discusses penguins. Recent research makes three claims about penguin diet:
 
 First, penguins prefer tropical fruits
 Second, these fruits affect their smell</code></pre>
-<p>Can be marked up with HTML to indicate its structure:</p>
-<div class="sourceCode" id="cb2"><pre
-class="sourceCode html"><code class="sourceCode html"><span id="cb2-1"><a href="#cb2-1" aria-hidden="true" tabindex="-1"></a><span class="dt">&lt;</span><span class="kw">h1</span><span class="dt">&gt;</span>Introduction<span class="dt">&lt;/</span><span class="kw">h1</span><span class="dt">&gt;</span></span>
+  <p>Can be marked up with HTML to indicate its structure:</p>
+  <div class="sourceCode" id="cb2"><pre
+  class="sourceCode html"><code class="sourceCode html"><span id="cb2-1"><a href="#cb2-1" aria-hidden="true" tabindex="-1"></a><span class="dt">&lt;</span><span class="kw">h1</span><span class="dt">&gt;</span>Introduction<span class="dt">&lt;/</span><span class="kw">h1</span><span class="dt">&gt;</span></span>
 <span id="cb2-2"><a href="#cb2-2" aria-hidden="true" tabindex="-1"></a></span>
 <span id="cb2-3"><a href="#cb2-3" aria-hidden="true" tabindex="-1"></a><span class="dt">&lt;</span><span class="kw">p</span><span class="dt">&gt;</span></span>
 <span id="cb2-4"><a href="#cb2-4" aria-hidden="true" tabindex="-1"></a>  This article discusses penguins. Recent research makes three claims about</span>
@@ -31,9 +45,10 @@ class="sourceCode html"><code class="sourceCode html"><span id="cb2-1"><a href="
 <span id="cb2-9"><a href="#cb2-9" aria-hidden="true" tabindex="-1"></a>  <span class="dt">&lt;</span><span class="kw">li</span><span class="dt">&gt;</span>First, penguins prefer tropical fruits<span class="dt">&lt;/</span><span class="kw">li</span><span class="dt">&gt;</span></span>
 <span id="cb2-10"><a href="#cb2-10" aria-hidden="true" tabindex="-1"></a>  <span class="dt">&lt;</span><span class="kw">li</span><span class="dt">&gt;</span>Second, these fruits affect their smell<span class="dt">&lt;/</span><span class="kw">li</span><span class="dt">&gt;</span></span>
 <span id="cb2-11"><a href="#cb2-11" aria-hidden="true" tabindex="-1"></a><span class="dt">&lt;/</span><span class="kw">ul</span><span class="dt">&gt;</span></span></code></pre></div>
-<p>A complete HTML document includes additional required structure:</p>
-<div class="sourceCode" id="cb3"><pre
-class="sourceCode html"><code class="sourceCode html"><span id="cb3-1"><a href="#cb3-1" aria-hidden="true" tabindex="-1"></a><span class="dt">&lt;!doctype</span> html<span class="dt">&gt;</span></span>
+  <p>A complete HTML document includes additional required
+  structure:</p>
+  <div class="sourceCode" id="cb3"><pre
+  class="sourceCode html"><code class="sourceCode html"><span id="cb3-1"><a href="#cb3-1" aria-hidden="true" tabindex="-1"></a><span class="dt">&lt;!doctype</span> html<span class="dt">&gt;</span></span>
 <span id="cb3-2"><a href="#cb3-2" aria-hidden="true" tabindex="-1"></a><span class="dt">&lt;</span><span class="kw">html</span><span class="ot"> lang</span><span class="op">=</span><span class="st">&quot;en&quot;</span><span class="dt">&gt;</span></span>
 <span id="cb3-3"><a href="#cb3-3" aria-hidden="true" tabindex="-1"></a>  <span class="dt">&lt;</span><span class="kw">head</span><span class="dt">&gt;</span></span>
 <span id="cb3-4"><a href="#cb3-4" aria-hidden="true" tabindex="-1"></a>    <span class="dt">&lt;</span><span class="kw">meta</span><span class="ot"> charset</span><span class="op">=</span><span class="st">&quot;utf-8&quot;</span><span class="dt">&gt;</span></span>
@@ -43,63 +58,64 @@ class="sourceCode html"><code class="sourceCode html"><span id="cb3-1"><a href="
 <span id="cb3-8"><a href="#cb3-8" aria-hidden="true" tabindex="-1"></a>    <span class="co">&lt;!-- Content goes here --&gt;</span></span>
 <span id="cb3-9"><a href="#cb3-9" aria-hidden="true" tabindex="-1"></a>  <span class="dt">&lt;/</span><span class="kw">body</span><span class="dt">&gt;</span></span>
 <span id="cb3-10"><a href="#cb3-10" aria-hidden="true" tabindex="-1"></a><span class="dt">&lt;/</span><span class="kw">html</span><span class="dt">&gt;</span></span></code></pre></div>
-<h3 id="key-html-tags-for-security-context">Key HTML Tags for Security
-Context</h3>
-<p>Several HTML tags are particularly relevant for this course:</p>
-<ol type="1">
-<li><p><code>&lt;script&gt;</code> - Executes JavaScript code</p>
-<div class="sourceCode" id="cb4"><pre
-class="sourceCode html"><code class="sourceCode html"><span id="cb4-1"><a href="#cb4-1" aria-hidden="true" tabindex="-1"></a><span class="co">&lt;!-- Load an external script --&gt;</span></span>
+  <h3 id="key-html-tags-for-security-context">Key HTML Tags for Security
+  Context</h3>
+  <p>Several HTML tags are particularly relevant for this course:</p>
+  <ol type="1">
+  <li><p><code>&lt;script&gt;</code> - Executes JavaScript code</p>
+  <div class="sourceCode" id="cb4"><pre
+  class="sourceCode html"><code class="sourceCode html"><span id="cb4-1"><a href="#cb4-1" aria-hidden="true" tabindex="-1"></a><span class="co">&lt;!-- Load an external script --&gt;</span></span>
 <span id="cb4-2"><a href="#cb4-2" aria-hidden="true" tabindex="-1"></a><span class="dt">&lt;</span><span class="kw">script</span><span class="ot"> src</span><span class="op">=</span><span class="st">&quot;/path/to/code.js&quot;</span><span class="dt">&gt;&lt;/</span><span class="kw">script</span><span class="dt">&gt;</span></span>
 <span id="cb4-3"><a href="#cb4-3" aria-hidden="true" tabindex="-1"></a></span>
 <span id="cb4-4"><a href="#cb4-4" aria-hidden="true" tabindex="-1"></a><span class="co">&lt;!-- Include inline code --&gt;</span></span>
 <span id="cb4-5"><a href="#cb4-5" aria-hidden="true" tabindex="-1"></a><span class="dt">&lt;</span><span class="kw">script</span><span class="dt">&gt;</span></span>
 <span id="cb4-6"><a href="#cb4-6" aria-hidden="true" tabindex="-1"></a>  <span class="fu">alert</span>(<span class="st">&#39;Hello!&#39;</span>)</span>
 <span id="cb4-7"><a href="#cb4-7" aria-hidden="true" tabindex="-1"></a><span class="dt">&lt;/</span><span class="kw">script</span><span class="dt">&gt;</span></span></code></pre></div></li>
-<li><p><code>&lt;iframe&gt;</code> - Embeds another webpage</p>
-<div class="sourceCode" id="cb5"><pre
-class="sourceCode html"><code class="sourceCode html"><span id="cb5-1"><a href="#cb5-1" aria-hidden="true" tabindex="-1"></a><span class="dt">&lt;</span><span class="kw">iframe</span><span class="ot"> src</span><span class="op">=</span><span class="st">&quot;https://example.com&quot;</span><span class="dt">&gt;&lt;/</span><span class="kw">iframe</span><span class="dt">&gt;</span></span></code></pre></div></li>
-<li><p><code>&lt;form&gt;</code> - Submits data to servers</p>
-<div class="sourceCode" id="cb6"><pre
-class="sourceCode html"><code class="sourceCode html"><span id="cb6-1"><a href="#cb6-1" aria-hidden="true" tabindex="-1"></a><span class="dt">&lt;</span><span class="kw">form</span><span class="ot"> action</span><span class="op">=</span><span class="st">&quot;/submit&quot;</span><span class="ot"> method</span><span class="op">=</span><span class="st">&quot;POST&quot;</span><span class="dt">&gt;</span></span>
+  <li><p><code>&lt;iframe&gt;</code> - Embeds another webpage</p>
+  <div class="sourceCode" id="cb5"><pre
+  class="sourceCode html"><code class="sourceCode html"><span id="cb5-1"><a href="#cb5-1" aria-hidden="true" tabindex="-1"></a><span class="dt">&lt;</span><span class="kw">iframe</span><span class="ot"> src</span><span class="op">=</span><span class="st">&quot;https://example.com&quot;</span><span class="dt">&gt;&lt;/</span><span class="kw">iframe</span><span class="dt">&gt;</span></span></code></pre></div></li>
+  <li><p><code>&lt;form&gt;</code> - Submits data to servers</p>
+  <div class="sourceCode" id="cb6"><pre
+  class="sourceCode html"><code class="sourceCode html"><span id="cb6-1"><a href="#cb6-1" aria-hidden="true" tabindex="-1"></a><span class="dt">&lt;</span><span class="kw">form</span><span class="ot"> action</span><span class="op">=</span><span class="st">&quot;/submit&quot;</span><span class="ot"> method</span><span class="op">=</span><span class="st">&quot;POST&quot;</span><span class="dt">&gt;</span></span>
 <span id="cb6-2"><a href="#cb6-2" aria-hidden="true" tabindex="-1"></a>  <span class="dt">&lt;</span><span class="kw">input</span><span class="ot"> name</span><span class="op">=</span><span class="st">&quot;username&quot;</span><span class="ot"> </span><span class="dt">/&gt;</span></span>
 <span id="cb6-3"><a href="#cb6-3" aria-hidden="true" tabindex="-1"></a>  <span class="dt">&lt;</span><span class="kw">button</span><span class="dt">&gt;</span>Submit<span class="dt">&lt;/</span><span class="kw">button</span><span class="dt">&gt;</span></span>
 <span id="cb6-4"><a href="#cb6-4" aria-hidden="true" tabindex="-1"></a><span class="dt">&lt;/</span><span class="kw">form</span><span class="dt">&gt;</span></span></code></pre></div></li>
-<li><p><code>&lt;a&gt;</code> - Creates links between pages</p>
-<div class="sourceCode" id="cb7"><pre
-class="sourceCode html"><code class="sourceCode html"><span id="cb7-1"><a href="#cb7-1" aria-hidden="true" tabindex="-1"></a><span class="dt">&lt;</span><span class="kw">a</span><span class="ot"> href</span><span class="op">=</span><span class="st">&quot;https://example.com&quot;</span><span class="dt">&gt;</span>Link text<span class="dt">&lt;/</span><span class="kw">a</span><span class="dt">&gt;</span></span></code></pre></div></li>
-</ol>
-<h2 id="urls-web-addressing">URLs: Web Addressing</h2>
-<p>URLs (Uniform Resource Locators) specify how to find resources on the
-web. They have several components:</p>
-<figure>
-<img src="./url.png" alt="Example URL structure" />
-<figcaption aria-hidden="true">Example URL structure</figcaption>
-</figure>
-<ul>
-<li>Protocol (e.g., <code>http://</code> or <code>https://</code>)</li>
-<li>Hostname (e.g., <code>example.com</code>)</li>
-<li>Port (optional, e.g., <code>:443</code>)</li>
-<li>Path (e.g., <code>/blog/post</code>)</li>
-<li>Query string (e.g., <code>?id=123&amp;user=alice</code>)</li>
-<li>Fragment (e.g., <code>#section1</code>)</li>
-</ul>
-<p>URLs can be specified in several ways: 1. Full URL:
-<code>https://example.com/news/2024/</code> 2. Protocol-relative:
-<code>//example.com/news/2024/</code> (inherits protocol from current
-page) 3. Root-relative: <code>/news/2024/</code> (relative to domain
-root) 4. Path-relative: <code>2024/</code> (relative to current
-path)</p>
-<p>This flexibility in URL specification becomes relevant for security
-when considering how browsers resolve URLs and enforce security
-boundaries.</p>
-<h2 id="css-visual-styling">CSS: Visual Styling</h2>
-<p>CSS (Cascading Style Sheets) controls the visual presentation of HTML
-elements. While CSS itself isn’t a major source of security
-vulnerabilities, understanding how it’s included in pages is
-important:</p>
-<div class="sourceCode" id="cb8"><pre
-class="sourceCode html"><code class="sourceCode html"><span id="cb8-1"><a href="#cb8-1" aria-hidden="true" tabindex="-1"></a><span class="co">&lt;!-- External stylesheet --&gt;</span></span>
+  <li><p><code>&lt;a&gt;</code> - Creates links between pages</p>
+  <div class="sourceCode" id="cb7"><pre
+  class="sourceCode html"><code class="sourceCode html"><span id="cb7-1"><a href="#cb7-1" aria-hidden="true" tabindex="-1"></a><span class="dt">&lt;</span><span class="kw">a</span><span class="ot"> href</span><span class="op">=</span><span class="st">&quot;https://example.com&quot;</span><span class="dt">&gt;</span>Link text<span class="dt">&lt;/</span><span class="kw">a</span><span class="dt">&gt;</span></span></code></pre></div></li>
+  </ol>
+  <h2 id="urls-web-addressing">URLs: Web Addressing</h2>
+  <p>URLs (Uniform Resource Locators) specify how to find resources on
+  the web. They have several components:</p>
+  <figure>
+  <img src="./url.png" alt="Example URL structure" />
+  <figcaption aria-hidden="true">Example URL structure</figcaption>
+  </figure>
+  <ul>
+  <li>Protocol (e.g., <code>http://</code> or
+  <code>https://</code>)</li>
+  <li>Hostname (e.g., <code>example.com</code>)</li>
+  <li>Port (optional, e.g., <code>:443</code>)</li>
+  <li>Path (e.g., <code>/blog/post</code>)</li>
+  <li>Query string (e.g., <code>?id=123&amp;user=alice</code>)</li>
+  <li>Fragment (e.g., <code>#section1</code>)</li>
+  </ul>
+  <p>URLs can be specified in several ways: 1. Full URL:
+  <code>https://example.com/news/2024/</code> 2. Protocol-relative:
+  <code>//example.com/news/2024/</code> (inherits protocol from current
+  page) 3. Root-relative: <code>/news/2024/</code> (relative to domain
+  root) 4. Path-relative: <code>2024/</code> (relative to current
+  path)</p>
+  <p>This flexibility in URL specification becomes relevant for security
+  when considering how browsers resolve URLs and enforce security
+  boundaries.</p>
+  <h2 id="css-visual-styling">CSS: Visual Styling</h2>
+  <p>CSS (Cascading Style Sheets) controls the visual presentation of
+  HTML elements. While CSS itself isn’t a major source of security
+  vulnerabilities, understanding how it’s included in pages is
+  important:</p>
+  <div class="sourceCode" id="cb8"><pre
+  class="sourceCode html"><code class="sourceCode html"><span id="cb8-1"><a href="#cb8-1" aria-hidden="true" tabindex="-1"></a><span class="co">&lt;!-- External stylesheet --&gt;</span></span>
 <span id="cb8-2"><a href="#cb8-2" aria-hidden="true" tabindex="-1"></a><span class="dt">&lt;</span><span class="kw">link</span><span class="ot"> rel</span><span class="op">=</span><span class="st">&quot;stylesheet&quot;</span><span class="ot"> href</span><span class="op">=</span><span class="st">&quot;/styles.css&quot;</span><span class="dt">&gt;</span></span>
 <span id="cb8-3"><a href="#cb8-3" aria-hidden="true" tabindex="-1"></a></span>
 <span id="cb8-4"><a href="#cb8-4" aria-hidden="true" tabindex="-1"></a><span class="co">&lt;!-- Internal stylesheet --&gt;</span></span>
@@ -109,19 +125,19 @@ class="sourceCode html"><code class="sourceCode html"><span id="cb8-1"><a href="
 <span id="cb8-8"><a href="#cb8-8" aria-hidden="true" tabindex="-1"></a></span>
 <span id="cb8-9"><a href="#cb8-9" aria-hidden="true" tabindex="-1"></a><span class="co">&lt;!-- Inline styles --&gt;</span></span>
 <span id="cb8-10"><a href="#cb8-10" aria-hidden="true" tabindex="-1"></a><span class="dt">&lt;</span><span class="kw">p</span><span class="ot"> style</span><span class="op">=</span><span class="st">&quot;color: red;&quot;</span><span class="dt">&gt;</span>Text<span class="dt">&lt;/</span><span class="kw">p</span><span class="dt">&gt;</span></span></code></pre></div>
-<p>CSS can be used for security exploits when combined with other
-vulnerabilities, particularly in cases where attackers can inject styles
-that affect page layout or visibility.</p>
-<h2 id="javascript-programming-the-web">JavaScript: Programming the
-Web</h2>
-<p>JavaScript allows websites to be interactive and dynamic. It can: -
-Modify the page content (DOM manipulation) - Respond to user actions
-(event handling) - Make network requests (AJAX/fetch) - Store data
-locally (localStorage/cookies) - Run computational tasks</p>
-<h3 id="including-javascript">Including JavaScript</h3>
-<p>JavaScript can be included in HTML documents in several ways:</p>
-<div class="sourceCode" id="cb9"><pre
-class="sourceCode html"><code class="sourceCode html"><span id="cb9-1"><a href="#cb9-1" aria-hidden="true" tabindex="-1"></a><span class="co">&lt;!-- External script --&gt;</span></span>
+  <p>CSS can be used for security exploits when combined with other
+  vulnerabilities, particularly in cases where attackers can inject
+  styles that affect page layout or visibility.</p>
+  <h2 id="javascript-programming-the-web">JavaScript: Programming the
+  Web</h2>
+  <p>JavaScript allows websites to be interactive and dynamic. It can: -
+  Modify the page content (DOM manipulation) - Respond to user actions
+  (event handling) - Make network requests (AJAX/fetch) - Store data
+  locally (localStorage/cookies) - Run computational tasks</p>
+  <h3 id="including-javascript">Including JavaScript</h3>
+  <p>JavaScript can be included in HTML documents in several ways:</p>
+  <div class="sourceCode" id="cb9"><pre
+  class="sourceCode html"><code class="sourceCode html"><span id="cb9-1"><a href="#cb9-1" aria-hidden="true" tabindex="-1"></a><span class="co">&lt;!-- External script --&gt;</span></span>
 <span id="cb9-2"><a href="#cb9-2" aria-hidden="true" tabindex="-1"></a><span class="dt">&lt;</span><span class="kw">script</span><span class="ot"> src</span><span class="op">=</span><span class="st">&quot;/code.js&quot;</span><span class="dt">&gt;&lt;/</span><span class="kw">script</span><span class="dt">&gt;</span></span>
 <span id="cb9-3"><a href="#cb9-3" aria-hidden="true" tabindex="-1"></a></span>
 <span id="cb9-4"><a href="#cb9-4" aria-hidden="true" tabindex="-1"></a><span class="co">&lt;!-- Inline script --&gt;</span></span>
@@ -131,18 +147,20 @@ class="sourceCode html"><code class="sourceCode html"><span id="cb9-1"><a href="
 <span id="cb9-8"><a href="#cb9-8" aria-hidden="true" tabindex="-1"></a></span>
 <span id="cb9-9"><a href="#cb9-9" aria-hidden="true" tabindex="-1"></a><span class="co">&lt;!-- Inline event handlers (not recommended) --&gt;</span></span>
 <span id="cb9-10"><a href="#cb9-10" aria-hidden="true" tabindex="-1"></a><span class="dt">&lt;</span><span class="kw">button</span><span class="ot"> onclick</span><span class="op">=</span><span class="st">&quot;alert(&#39;clicked&#39;)&quot;</span><span class="dt">&gt;</span>Click me<span class="dt">&lt;/</span><span class="kw">button</span><span class="dt">&gt;</span></span></code></pre></div>
-<h2 id="security-implications">Security Implications</h2>
-<p>These fundamental technologies create several security considerations
-that we’ll explore in detail in subsequent lessons:</p>
-<ol type="1">
-<li><strong>Content Isolation</strong>: How browsers prevent one website
-from interfering with another</li>
-<li><strong>Code Execution</strong>: How JavaScript’s abilities are
-constrained by the browser</li>
-<li><strong>Data Access</strong>: How websites can access and store user
-data</li>
-<li><strong>Cross-Origin Requests</strong>: How browsers control
-communication between different websites</li>
-</ol>
-<p>Later lessons will build on these fundamentals to explain specific
-vulnerabilities and their mitigations.</p>
+  <h2 id="security-implications">Security Implications</h2>
+  <p>These fundamental technologies create several security
+  considerations that we’ll explore in detail in subsequent lessons:</p>
+  <ol type="1">
+  <li><strong>Content Isolation</strong>: How browsers prevent one
+  website from interfering with another</li>
+  <li><strong>Code Execution</strong>: How JavaScript’s abilities are
+  constrained by the browser</li>
+  <li><strong>Data Access</strong>: How websites can access and store
+  user data</li>
+  <li><strong>Cross-Origin Requests</strong>: How browsers control
+  communication between different websites</li>
+  </ol>
+  <p>Later lessons will build on these fundamentals to explain specific
+  vulnerabilities and their mitigations.</p>
+</body>
+</html>

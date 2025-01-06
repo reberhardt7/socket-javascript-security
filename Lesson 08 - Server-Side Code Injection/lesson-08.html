@@ -1,29 +1,45 @@
-<h1 id="lesson-8-server-side-code-injection">Lesson 8: Server-side Code
-Injection</h1>
-<h2 id="introduction">Introduction</h2>
-<p>While client-side vulnerabilities like XSS primarily affect
-individual users, server-side code injection vulnerabilities can
-compromise entire applications and their data. These vulnerabilities
-occur when an application takes user input and combines it with code
-that will be executed by the server, without properly separating data
-from code.</p>
-<p>Server-side code injection is particularly dangerous because
-attackers can: - Read or modify any data in the application’s database -
-Execute arbitrary commands on the server - Access internal network
-resources - Move laterally to attack other systems - Steal or destroy
-sensitive data</p>
-<p>This lesson covers two major types of server-side code injection:
-subprocess command injection and SQL injection.</p>
-<h2 id="subprocess-command-injection">Subprocess Command Injection</h2>
-<p>Command injection occurs when an application passes unsafe user input
-to a system shell. Since the shell can run any command on the system,
-this essentially gives attackers complete control over the server.</p>
-<h3 id="example-a-vulnerable-file-viewer">Example: A Vulnerable File
-Viewer</h3>
-<p>Consider this simple Node.js application that lets users view files
-stored on a server:</p>
-<div class="sourceCode" id="cb1"><pre
-class="sourceCode javascript"><code class="sourceCode javascript"><span id="cb1-1"><a href="#cb1-1" aria-hidden="true" tabindex="-1"></a><span class="kw">const</span> app <span class="op">=</span> <span class="fu">express</span>()</span>
+<html>
+<head>
+  <style>
+    body {
+      max-width: 800px;
+      margin-left: auto;
+      margin-right: auto;
+    }
+    img,video {
+      max-width: 100%;
+    }
+  </style>
+</head>
+<body>
+  <h1 id="lesson-8-server-side-code-injection">Lesson 8: Server-side
+  Code Injection</h1>
+  <h2 id="introduction">Introduction</h2>
+  <p>While client-side vulnerabilities like XSS primarily affect
+  individual users, server-side code injection vulnerabilities can
+  compromise entire applications and their data. These vulnerabilities
+  occur when an application takes user input and combines it with code
+  that will be executed by the server, without properly separating data
+  from code.</p>
+  <p>Server-side code injection is particularly dangerous because
+  attackers can: - Read or modify any data in the application’s database
+  - Execute arbitrary commands on the server - Access internal network
+  resources - Move laterally to attack other systems - Steal or destroy
+  sensitive data</p>
+  <p>This lesson covers two major types of server-side code injection:
+  subprocess command injection and SQL injection.</p>
+  <h2 id="subprocess-command-injection">Subprocess Command
+  Injection</h2>
+  <p>Command injection occurs when an application passes unsafe user
+  input to a system shell. Since the shell can run any command on the
+  system, this essentially gives attackers complete control over the
+  server.</p>
+  <h3 id="example-a-vulnerable-file-viewer">Example: A Vulnerable File
+  Viewer</h3>
+  <p>Consider this simple Node.js application that lets users view files
+  stored on a server:</p>
+  <div class="sourceCode" id="cb1"><pre
+  class="sourceCode javascript"><code class="sourceCode javascript"><span id="cb1-1"><a href="#cb1-1" aria-hidden="true" tabindex="-1"></a><span class="kw">const</span> app <span class="op">=</span> <span class="fu">express</span>()</span>
 <span id="cb1-2"><a href="#cb1-2" aria-hidden="true" tabindex="-1"></a></span>
 <span id="cb1-3"><a href="#cb1-3" aria-hidden="true" tabindex="-1"></a>app<span class="op">.</span><span class="fu">get</span>(<span class="st">&#39;/&#39;</span><span class="op">,</span> (req<span class="op">,</span> res) <span class="kw">=&gt;</span> {</span>
 <span id="cb1-4"><a href="#cb1-4" aria-hidden="true" tabindex="-1"></a>  res<span class="op">.</span><span class="fu">send</span>(<span class="vs">`</span></span>
@@ -40,20 +56,20 @@ class="sourceCode javascript"><code class="sourceCode javascript"><span id="cb1-
 <span id="cb1-15"><a href="#cb1-15" aria-hidden="true" tabindex="-1"></a>  <span class="kw">const</span> stdout <span class="op">=</span> childProcess<span class="op">.</span><span class="fu">execSync</span>(<span class="vs">`cat </span><span class="sc">${</span>filename<span class="sc">}</span><span class="vs">`</span>)</span>
 <span id="cb1-16"><a href="#cb1-16" aria-hidden="true" tabindex="-1"></a>  res<span class="op">.</span><span class="fu">send</span>(stdout<span class="op">.</span><span class="fu">toString</span>())</span>
 <span id="cb1-17"><a href="#cb1-17" aria-hidden="true" tabindex="-1"></a>})</span></code></pre></div>
-<p>This code takes a filename from the user and uses the Unix
-<code>cat</code> command to display its contents. The vulnerability is
-in combining user input directly with shell commands. In Unix shells,
-the semicolon (;) separates different commands, so attackers can inject
-additional commands after the intended one. If an attacker submitted
-this input:</p>
-<pre><code>file.txt; rm -rf /</code></pre>
-<p>It would result in the following shell command being executed:</p>
-<pre><code>cat file.txt; rm -rf /</code></pre>
-<h3 id="safer-alternatives">Safer Alternatives</h3>
-<p>Instead of building shell commands using string concatenation,
-Node.js provides APIs that safely handle argument passing:</p>
-<div class="sourceCode" id="cb4"><pre
-class="sourceCode javascript"><code class="sourceCode javascript"><span id="cb4-1"><a href="#cb4-1" aria-hidden="true" tabindex="-1"></a><span class="co">// Unsafe - string concatenation</span></span>
+  <p>This code takes a filename from the user and uses the Unix
+  <code>cat</code> command to display its contents. The vulnerability is
+  in combining user input directly with shell commands. In Unix shells,
+  the semicolon (;) separates different commands, so attackers can
+  inject additional commands after the intended one. If an attacker
+  submitted this input:</p>
+  <pre><code>file.txt; rm -rf /</code></pre>
+  <p>It would result in the following shell command being executed:</p>
+  <pre><code>cat file.txt; rm -rf /</code></pre>
+  <h3 id="safer-alternatives">Safer Alternatives</h3>
+  <p>Instead of building shell commands using string concatenation,
+  Node.js provides APIs that safely handle argument passing:</p>
+  <div class="sourceCode" id="cb4"><pre
+  class="sourceCode javascript"><code class="sourceCode javascript"><span id="cb4-1"><a href="#cb4-1" aria-hidden="true" tabindex="-1"></a><span class="co">// Unsafe - string concatenation</span></span>
 <span id="cb4-2"><a href="#cb4-2" aria-hidden="true" tabindex="-1"></a><span class="kw">const</span> stdout <span class="op">=</span> childProcess<span class="op">.</span><span class="fu">execSync</span>(<span class="vs">`cat </span><span class="sc">${</span>filename<span class="sc">}</span><span class="vs">`</span>)</span>
 <span id="cb4-3"><a href="#cb4-3" aria-hidden="true" tabindex="-1"></a></span>
 <span id="cb4-4"><a href="#cb4-4" aria-hidden="true" tabindex="-1"></a><span class="co">// Safe - argument array</span></span>
@@ -63,24 +79,24 @@ class="sourceCode javascript"><code class="sourceCode javascript"><span id="cb4-
 <span id="cb4-8"><a href="#cb4-8" aria-hidden="true" tabindex="-1"></a>} <span class="cf">else</span> {</span>
 <span id="cb4-9"><a href="#cb4-9" aria-hidden="true" tabindex="-1"></a>  res<span class="op">.</span><span class="fu">send</span>(child<span class="op">.</span><span class="at">stdout</span><span class="op">.</span><span class="fu">toString</span>())</span>
 <span id="cb4-10"><a href="#cb4-10" aria-hidden="true" tabindex="-1"></a>}</span></code></pre></div>
-<p>The <code>spawnSync</code> function takes the command and its
-arguments separately, ensuring proper passing of arguments, and it
-invokes the subprocess directly without an intermediate shell,
-eliminating the risk that arguments may be parsed in a surprising
-way.</p>
-<p><em>Note:</em> <code>spawn</code> should be used instead of
-<code>spawnSync</code> to avoid event loop blocking, but
-<code>spawnSync</code> is easier to demonstrate concisely in this
-context.</p>
-<h2 id="sql-injection">SQL Injection</h2>
-<p>Similarly, SQL injection occurs when user input is incorporated into
-database queries without proper escaping. This allows attackers to
-modify or extend the intended query, potentially accessing or modifying
-any data in the database.</p>
-<h3 id="basic-sql-injection">Basic SQL Injection</h3>
-<p>Consider this code for handling user authentication:</p>
-<div class="sourceCode" id="cb5"><pre
-class="sourceCode javascript"><code class="sourceCode javascript"><span id="cb5-1"><a href="#cb5-1" aria-hidden="true" tabindex="-1"></a>app<span class="op">.</span><span class="fu">post</span>(<span class="st">&#39;/login&#39;</span><span class="op">,</span> (req<span class="op">,</span> res) <span class="kw">=&gt;</span> {</span>
+  <p>The <code>spawnSync</code> function takes the command and its
+  arguments separately, ensuring proper passing of arguments, and it
+  invokes the subprocess directly without an intermediate shell,
+  eliminating the risk that arguments may be parsed in a surprising
+  way.</p>
+  <p><em>Note:</em> <code>spawn</code> should be used instead of
+  <code>spawnSync</code> to avoid event loop blocking, but
+  <code>spawnSync</code> is easier to demonstrate concisely in this
+  context.</p>
+  <h2 id="sql-injection">SQL Injection</h2>
+  <p>Similarly, SQL injection occurs when user input is incorporated
+  into database queries without proper escaping. This allows attackers
+  to modify or extend the intended query, potentially accessing or
+  modifying any data in the database.</p>
+  <h3 id="basic-sql-injection">Basic SQL Injection</h3>
+  <p>Consider this code for handling user authentication:</p>
+  <div class="sourceCode" id="cb5"><pre
+  class="sourceCode javascript"><code class="sourceCode javascript"><span id="cb5-1"><a href="#cb5-1" aria-hidden="true" tabindex="-1"></a>app<span class="op">.</span><span class="fu">post</span>(<span class="st">&#39;/login&#39;</span><span class="op">,</span> (req<span class="op">,</span> res) <span class="kw">=&gt;</span> {</span>
 <span id="cb5-2"><a href="#cb5-2" aria-hidden="true" tabindex="-1"></a>  <span class="kw">const</span> { username<span class="op">,</span> password } <span class="op">=</span> req<span class="op">.</span><span class="at">body</span></span>
 <span id="cb5-3"><a href="#cb5-3" aria-hidden="true" tabindex="-1"></a>  <span class="kw">const</span> query <span class="op">=</span> <span class="vs">`SELECT * FROM users</span></span>
 <span id="cb5-4"><a href="#cb5-4" aria-hidden="true" tabindex="-1"></a><span class="vs">    WHERE username = &#39;</span><span class="sc">${</span>username<span class="sc">}</span><span class="vs">&#39;</span></span>
@@ -95,53 +111,55 @@ class="sourceCode javascript"><code class="sourceCode javascript"><span id="cb5-
 <span id="cb5-13"><a href="#cb5-13" aria-hidden="true" tabindex="-1"></a>    res<span class="op">.</span><span class="fu">send</span>(<span class="st">&#39;Welcome &#39;</span> <span class="op">+</span> row<span class="op">.</span><span class="at">username</span>)</span>
 <span id="cb5-14"><a href="#cb5-14" aria-hidden="true" tabindex="-1"></a>  })</span>
 <span id="cb5-15"><a href="#cb5-15" aria-hidden="true" tabindex="-1"></a>})</span></code></pre></div>
-<p>Note: This code is bad for multiple reasons – in particular, you
-should never store raw passwords in a database – but it demonstrates SQL
-injection clearly.</p>
-<p>With this code, an attacker can bypass authentication by submitting
-the following input:</p>
-<pre><code>username: &#39; OR &#39;1&#39;=&#39;1
+  <p>Note: This code is bad for multiple reasons – in particular, you
+  should never store raw passwords in a database – but it demonstrates
+  SQL injection clearly.</p>
+  <p>With this code, an attacker can bypass authentication by submitting
+  the following input:</p>
+  <pre><code>username: &#39; OR &#39;1&#39;=&#39;1
 password: &#39; OR &#39;1&#39;=&#39;1</code></pre>
-<p>This produces the following SQL query:</p>
-<div class="sourceCode" id="cb7"><pre
-class="sourceCode sql"><code class="sourceCode sql"><span id="cb7-1"><a href="#cb7-1" aria-hidden="true" tabindex="-1"></a><span class="kw">SELECT</span> <span class="op">*</span> <span class="kw">FROM</span> users</span>
+  <p>This produces the following SQL query:</p>
+  <div class="sourceCode" id="cb7"><pre
+  class="sourceCode sql"><code class="sourceCode sql"><span id="cb7-1"><a href="#cb7-1" aria-hidden="true" tabindex="-1"></a><span class="kw">SELECT</span> <span class="op">*</span> <span class="kw">FROM</span> users</span>
 <span id="cb7-2"><a href="#cb7-2" aria-hidden="true" tabindex="-1"></a>  <span class="kw">WHERE</span> username <span class="op">=</span> <span class="st">&#39;&#39;</span> <span class="kw">OR</span> <span class="st">&#39;1&#39;</span><span class="op">=</span><span class="st">&#39;1&#39;</span></span>
 <span id="cb7-3"><a href="#cb7-3" aria-hidden="true" tabindex="-1"></a>  <span class="kw">AND</span> <span class="kw">password</span> <span class="op">=</span> <span class="st">&#39;&#39;</span> <span class="kw">OR</span> <span class="st">&#39;1&#39;</span><span class="op">=</span><span class="st">&#39;1&#39;</span></span></code></pre></div>
-<p>As a result, the attacker will be able to log in successfully.</p>
-<h3 id="running-multiple-queries">Running Multiple Queries</h3>
-<p>Some database APIs allow multiple queries separated by semicolons.
-Consider this logging code:</p>
-<div class="sourceCode" id="cb8"><pre
-class="sourceCode javascript"><code class="sourceCode javascript"><span id="cb8-1"><a href="#cb8-1" aria-hidden="true" tabindex="-1"></a>db<span class="op">.</span><span class="fu">exec</span>(<span class="vs">`INSERT INTO logs</span></span>
+  <p>As a result, the attacker will be able to log in successfully.</p>
+  <h3 id="running-multiple-queries">Running Multiple Queries</h3>
+  <p>Some database APIs allow multiple queries separated by semicolons.
+  Consider this logging code:</p>
+  <div class="sourceCode" id="cb8"><pre
+  class="sourceCode javascript"><code class="sourceCode javascript"><span id="cb8-1"><a href="#cb8-1" aria-hidden="true" tabindex="-1"></a>db<span class="op">.</span><span class="fu">exec</span>(<span class="vs">`INSERT INTO logs</span></span>
 <span id="cb8-2"><a href="#cb8-2" aria-hidden="true" tabindex="-1"></a><span class="vs">  VALUES (&quot;Login attempt from </span><span class="sc">${</span>username<span class="sc">}</span><span class="vs">&quot;)`</span>)</span></code></pre></div>
-<p>An attacker could submit:</p>
-<pre><code>username: x&quot;); DROP TABLE users; --</code></pre>
-<p>Producing:</p>
-<div class="sourceCode" id="cb10"><pre
-class="sourceCode sql"><code class="sourceCode sql"><span id="cb10-1"><a href="#cb10-1" aria-hidden="true" tabindex="-1"></a><span class="kw">INSERT</span> <span class="kw">INTO</span> logs</span>
+  <p>An attacker could submit:</p>
+  <pre><code>username: x&quot;); DROP TABLE users; --</code></pre>
+  <p>Producing:</p>
+  <div class="sourceCode" id="cb10"><pre
+  class="sourceCode sql"><code class="sourceCode sql"><span id="cb10-1"><a href="#cb10-1" aria-hidden="true" tabindex="-1"></a><span class="kw">INSERT</span> <span class="kw">INTO</span> logs</span>
 <span id="cb10-2"><a href="#cb10-2" aria-hidden="true" tabindex="-1"></a>  <span class="kw">VALUES</span> (<span class="ot">&quot;Login attempt from x&quot;</span>);</span>
 <span id="cb10-3"><a href="#cb10-3" aria-hidden="true" tabindex="-1"></a>  <span class="kw">DROP</span> <span class="kw">TABLE</span> users; <span class="co">--&quot;)</span></span></code></pre></div>
-<p>This executes two queries: 1. Insert a log entry 2. Delete the entire
-users table</p>
-<h2 id="defense-use-parameterized-queries">Defense: Use Parameterized
-Queries</h2>
-<p>Never build queries using string concatenation with untrusted input.
-Instead, use parameterized queries that handle escaping:</p>
-<div class="sourceCode" id="cb11"><pre
-class="sourceCode javascript"><code class="sourceCode javascript"><span id="cb11-1"><a href="#cb11-1" aria-hidden="true" tabindex="-1"></a><span class="co">// Unsafe</span></span>
+  <p>This executes two queries: 1. Insert a log entry 2. Delete the
+  entire users table</p>
+  <h2 id="defense-use-parameterized-queries">Defense: Use Parameterized
+  Queries</h2>
+  <p>Never build queries using string concatenation with untrusted
+  input. Instead, use parameterized queries that handle escaping:</p>
+  <div class="sourceCode" id="cb11"><pre
+  class="sourceCode javascript"><code class="sourceCode javascript"><span id="cb11-1"><a href="#cb11-1" aria-hidden="true" tabindex="-1"></a><span class="co">// Unsafe</span></span>
 <span id="cb11-2"><a href="#cb11-2" aria-hidden="true" tabindex="-1"></a><span class="kw">const</span> query <span class="op">=</span> <span class="vs">`SELECT * FROM users</span></span>
 <span id="cb11-3"><a href="#cb11-3" aria-hidden="true" tabindex="-1"></a><span class="vs">  WHERE username = &quot;</span><span class="sc">${</span>username<span class="sc">}</span><span class="vs">&quot;`</span></span>
 <span id="cb11-4"><a href="#cb11-4" aria-hidden="true" tabindex="-1"></a></span>
 <span id="cb11-5"><a href="#cb11-5" aria-hidden="true" tabindex="-1"></a><span class="co">// Safe</span></span>
 <span id="cb11-6"><a href="#cb11-6" aria-hidden="true" tabindex="-1"></a><span class="kw">const</span> query <span class="op">=</span> <span class="st">&#39;SELECT * FROM users WHERE username = ?&#39;</span></span>
 <span id="cb11-7"><a href="#cb11-7" aria-hidden="true" tabindex="-1"></a><span class="kw">const</span> results <span class="op">=</span> db<span class="op">.</span><span class="fu">all</span>(query<span class="op">,</span> username)</span></code></pre></div>
-<p>The database driver escapes special characters and ensures user input
-can’t change the query structure.</p>
-<h2 id="summary">Summary</h2>
-<p>Server-side code injection vulnerabilities arise when applications
-fail to properly separate code from data. Command injection lets
-attackers execute system commands, while SQL injection enables database
-manipulation. The key defense is to never build commands or queries via
-string concatenation with untrusted input. Instead, use APIs that keep
-data separate from commands (e.g. <code>spawn</code>, SQL parameterized
-queries).</p>
+  <p>The database driver escapes special characters and ensures user
+  input can’t change the query structure.</p>
+  <h2 id="summary">Summary</h2>
+  <p>Server-side code injection vulnerabilities arise when applications
+  fail to properly separate code from data. Command injection lets
+  attackers execute system commands, while SQL injection enables
+  database manipulation. The key defense is to never build commands or
+  queries via string concatenation with untrusted input. Instead, use
+  APIs that keep data separate from commands (e.g. <code>spawn</code>,
+  SQL parameterized queries).</p>
+</body>
+</html>

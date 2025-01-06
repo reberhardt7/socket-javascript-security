@@ -1,71 +1,86 @@
-<h1 id="lesson-6-cross-site-request-forgery-csrf">Lesson 6: Cross-Site
-Request Forgery (CSRF)</h1>
-<h2 id="introduction">Introduction</h2>
-<p>In previous lessons, we explored how browsers manage state across
-requests using cookies and how websites isolate themselves from each
-other using the Same-Origin Policy. Cross-Site Request Forgery (CSRF) is
-an attack that exploits how browsers handle cookies - specifically, that
-browsers automatically include cookies when making requests to a site,
-even when those requests are initiated by a different site.</p>
-<h2 id="understanding-csrf">Understanding CSRF</h2>
-<p>CSRF is an attack that forces an end user to execute unwanted actions
-on a website where they are currently authenticated. The key insight is
-that when you are logged into a website, your browser will automatically
-include your authentication cookies with every request to that site,
-regardless of which site initiated the request.</p>
-<p>For example, imagine you are logged into your bank at
-<code>bank.com</code> and then visit <code>attacker.com</code>. The
-attacker’s site could contain code that causes your browser to make a
-request to <code>bank.com/transfer?to=attacker&amp;amount=1000</code>.
-Because you are logged in to <code>bank.com</code>, your browser will
-automatically include your authentication cookies with this request. The
-bank’s server sees a valid request with valid authentication cookies and
-has no reliable way to determine that you didn’t intend to make this
-request.</p>
-<p>Common CSRF attacks include: - Transferring funds from
-banking/financial sites - Changing account email address or password -
-Purchasing items from e-commerce sites - Making posts or sending
-messages on social media - For admin users: adding new admin accounts or
-executing privileged actions</p>
-<h2 id="how-csrf-works">How CSRF Works</h2>
-<p>Let’s examine a concrete example. Consider this legitimate transfer
-form on <code>bank.com</code>:</p>
-<div class="sourceCode" id="cb1"><pre
-class="sourceCode html"><code class="sourceCode html"><span id="cb1-1"><a href="#cb1-1" aria-hidden="true" tabindex="-1"></a><span class="dt">&lt;</span><span class="kw">form</span><span class="ot"> method</span><span class="op">=</span><span class="st">&quot;POST&quot;</span><span class="ot"> action</span><span class="op">=</span><span class="st">&quot;/transfer&quot;</span><span class="dt">&gt;</span></span>
+<html>
+<head>
+  <style>
+    body {
+      max-width: 800px;
+      margin-left: auto;
+      margin-right: auto;
+    }
+    img,video {
+      max-width: 100%;
+    }
+  </style>
+</head>
+<body>
+  <h1 id="lesson-6-cross-site-request-forgery-csrf">Lesson 6: Cross-Site
+  Request Forgery (CSRF)</h1>
+  <h2 id="introduction">Introduction</h2>
+  <p>In previous lessons, we explored how browsers manage state across
+  requests using cookies and how websites isolate themselves from each
+  other using the Same-Origin Policy. Cross-Site Request Forgery (CSRF)
+  is an attack that exploits how browsers handle cookies - specifically,
+  that browsers automatically include cookies when making requests to a
+  site, even when those requests are initiated by a different site.</p>
+  <h2 id="understanding-csrf">Understanding CSRF</h2>
+  <p>CSRF is an attack that forces an end user to execute unwanted
+  actions on a website where they are currently authenticated. The key
+  insight is that when you are logged into a website, your browser will
+  automatically include your authentication cookies with every request
+  to that site, regardless of which site initiated the request.</p>
+  <p>For example, imagine you are logged into your bank at
+  <code>bank.com</code> and then visit <code>attacker.com</code>. The
+  attacker’s site could contain code that causes your browser to make a
+  request to <code>bank.com/transfer?to=attacker&amp;amount=1000</code>.
+  Because you are logged in to <code>bank.com</code>, your browser will
+  automatically include your authentication cookies with this request.
+  The bank’s server sees a valid request with valid authentication
+  cookies and has no reliable way to determine that you didn’t intend to
+  make this request.</p>
+  <p>Common CSRF attacks include: - Transferring funds from
+  banking/financial sites - Changing account email address or password -
+  Purchasing items from e-commerce sites - Making posts or sending
+  messages on social media - For admin users: adding new admin accounts
+  or executing privileged actions</p>
+  <h2 id="how-csrf-works">How CSRF Works</h2>
+  <p>Let’s examine a concrete example. Consider this legitimate transfer
+  form on <code>bank.com</code>:</p>
+  <div class="sourceCode" id="cb1"><pre
+  class="sourceCode html"><code class="sourceCode html"><span id="cb1-1"><a href="#cb1-1" aria-hidden="true" tabindex="-1"></a><span class="dt">&lt;</span><span class="kw">form</span><span class="ot"> method</span><span class="op">=</span><span class="st">&quot;POST&quot;</span><span class="ot"> action</span><span class="op">=</span><span class="st">&quot;/transfer&quot;</span><span class="dt">&gt;</span></span>
 <span id="cb1-2"><a href="#cb1-2" aria-hidden="true" tabindex="-1"></a>  Send amount: <span class="dt">&lt;</span><span class="kw">input</span><span class="ot"> name</span><span class="op">=</span><span class="st">&quot;amount&quot;</span><span class="ot"> </span><span class="dt">/&gt;</span></span>
 <span id="cb1-3"><a href="#cb1-3" aria-hidden="true" tabindex="-1"></a>  To user: <span class="dt">&lt;</span><span class="kw">input</span><span class="ot"> name</span><span class="op">=</span><span class="st">&quot;to&quot;</span><span class="ot"> </span><span class="dt">/&gt;</span></span>
 <span id="cb1-4"><a href="#cb1-4" aria-hidden="true" tabindex="-1"></a>  <span class="dt">&lt;</span><span class="kw">input</span><span class="ot"> type</span><span class="op">=</span><span class="st">&quot;submit&quot;</span><span class="ot"> value</span><span class="op">=</span><span class="st">&quot;Send&quot;</span><span class="ot"> </span><span class="dt">/&gt;</span></span>
 <span id="cb1-5"><a href="#cb1-5" aria-hidden="true" tabindex="-1"></a><span class="dt">&lt;/</span><span class="kw">form</span><span class="dt">&gt;</span></span></code></pre></div>
-<p>An attacker could create a malicious page on
-<code>attacker.com</code> containing:</p>
-<div class="sourceCode" id="cb2"><pre
-class="sourceCode html"><code class="sourceCode html"><span id="cb2-1"><a href="#cb2-1" aria-hidden="true" tabindex="-1"></a><span class="dt">&lt;</span><span class="kw">form</span><span class="ot"> method</span><span class="op">=</span><span class="st">&quot;POST&quot;</span><span class="ot"> action</span><span class="op">=</span><span class="st">&quot;http://bank.com/transfer&quot;</span><span class="dt">&gt;</span></span>
+  <p>An attacker could create a malicious page on
+  <code>attacker.com</code> containing:</p>
+  <div class="sourceCode" id="cb2"><pre
+  class="sourceCode html"><code class="sourceCode html"><span id="cb2-1"><a href="#cb2-1" aria-hidden="true" tabindex="-1"></a><span class="dt">&lt;</span><span class="kw">form</span><span class="ot"> method</span><span class="op">=</span><span class="st">&quot;POST&quot;</span><span class="ot"> action</span><span class="op">=</span><span class="st">&quot;http://bank.com/transfer&quot;</span><span class="dt">&gt;</span></span>
 <span id="cb2-2"><a href="#cb2-2" aria-hidden="true" tabindex="-1"></a>  <span class="dt">&lt;</span><span class="kw">input</span><span class="ot"> name</span><span class="op">=</span><span class="st">&quot;amount&quot;</span><span class="ot"> value</span><span class="op">=</span><span class="st">&quot;1000&quot;</span><span class="ot"> </span><span class="dt">/&gt;</span></span>
 <span id="cb2-3"><a href="#cb2-3" aria-hidden="true" tabindex="-1"></a>  <span class="dt">&lt;</span><span class="kw">input</span><span class="ot"> name</span><span class="op">=</span><span class="st">&quot;to&quot;</span><span class="ot"> value</span><span class="op">=</span><span class="st">&quot;attacker&quot;</span><span class="ot"> </span><span class="dt">/&gt;</span></span>
 <span id="cb2-4"><a href="#cb2-4" aria-hidden="true" tabindex="-1"></a><span class="dt">&lt;/</span><span class="kw">form</span><span class="dt">&gt;</span></span>
 <span id="cb2-5"><a href="#cb2-5" aria-hidden="true" tabindex="-1"></a><span class="dt">&lt;</span><span class="kw">script</span><span class="dt">&gt;</span></span>
 <span id="cb2-6"><a href="#cb2-6" aria-hidden="true" tabindex="-1"></a>  <span class="bu">document</span><span class="op">.</span><span class="at">forms</span>[<span class="dv">0</span>]<span class="op">.</span><span class="fu">submit</span>()<span class="op">;</span> <span class="co">// Auto-submit the form</span></span>
 <span id="cb2-7"><a href="#cb2-7" aria-hidden="true" tabindex="-1"></a><span class="dt">&lt;/</span><span class="kw">script</span><span class="dt">&gt;</span></span></code></pre></div>
-<p>When a victim who is logged into <code>bank.com</code> visits the
-malicious page: 1. The attacker’s JavaScript automatically submits the
-form to <code>bank.com</code> 2. The browser includes the victim’s
-<code>bank.com</code> cookies with the request because cookies are
-automatically included in cross-origin requests 3. <code>bank.com</code>
-receives a valid request with valid authentication cookies 4. The
-transfer executes using the victim’s authenticated session</p>
-<p>Importantly, this attack works <em>despite</em> the Same-Origin
-policy, because the attacker doesn’t need to be able to see the response
-from the forged request. They only need the side effects (like the
-transfer) to occur. The Same-Origin Policy prevents
-<code>attacker.com</code> from reading the response from
-<code>bank.com</code>, but it doesn’t prevent the request from being
-made in the first place.</p>
-<h2 id="csrf-mitigations">CSRF Mitigations</h2>
-<h3 id="the-referer-header">The <code>Referer</code> Header</h3>
-<p>One approach is to check the HTTP <code>Referer</code> header, which
-indicates which URL initiated the request:</p>
-<div class="sourceCode" id="cb3"><pre
-class="sourceCode javascript"><code class="sourceCode javascript"><span id="cb3-1"><a href="#cb3-1" aria-hidden="true" tabindex="-1"></a>app<span class="op">.</span><span class="fu">post</span>(<span class="st">&#39;/transfer&#39;</span><span class="op">,</span> (req<span class="op">,</span> res) <span class="kw">=&gt;</span> {</span>
+  <p>When a victim who is logged into <code>bank.com</code> visits the
+  malicious page: 1. The attacker’s JavaScript automatically submits the
+  form to <code>bank.com</code> 2. The browser includes the victim’s
+  <code>bank.com</code> cookies with the request because cookies are
+  automatically included in cross-origin requests 3.
+  <code>bank.com</code> receives a valid request with valid
+  authentication cookies 4. The transfer executes using the victim’s
+  authenticated session</p>
+  <p>Importantly, this attack works <em>despite</em> the Same-Origin
+  policy, because the attacker doesn’t need to be able to see the
+  response from the forged request. They only need the side effects
+  (like the transfer) to occur. The Same-Origin Policy prevents
+  <code>attacker.com</code> from reading the response from
+  <code>bank.com</code>, but it doesn’t prevent the request from being
+  made in the first place.</p>
+  <h2 id="csrf-mitigations">CSRF Mitigations</h2>
+  <h3 id="the-referer-header">The <code>Referer</code> Header</h3>
+  <p>One approach is to check the HTTP <code>Referer</code> header,
+  which indicates which URL initiated the request:</p>
+  <div class="sourceCode" id="cb3"><pre
+  class="sourceCode javascript"><code class="sourceCode javascript"><span id="cb3-1"><a href="#cb3-1" aria-hidden="true" tabindex="-1"></a>app<span class="op">.</span><span class="fu">post</span>(<span class="st">&#39;/transfer&#39;</span><span class="op">,</span> (req<span class="op">,</span> res) <span class="kw">=&gt;</span> {</span>
 <span id="cb3-2"><a href="#cb3-2" aria-hidden="true" tabindex="-1"></a>  <span class="kw">const</span> referer <span class="op">=</span> req<span class="op">.</span><span class="at">headers</span><span class="op">.</span><span class="at">referer</span><span class="op">;</span></span>
 <span id="cb3-3"><a href="#cb3-3" aria-hidden="true" tabindex="-1"></a>  <span class="cf">if</span> (<span class="op">!</span>referer <span class="op">||</span> <span class="op">!</span>referer<span class="op">.</span><span class="fu">startsWith</span>(<span class="st">&#39;https://bank.com&#39;</span>)) {</span>
 <span id="cb3-4"><a href="#cb3-4" aria-hidden="true" tabindex="-1"></a>    res<span class="op">.</span><span class="fu">status</span>(<span class="dv">403</span>)<span class="op">.</span><span class="fu">send</span>(<span class="st">&#39;Invalid referer&#39;</span>)<span class="op">;</span></span>
@@ -73,55 +88,55 @@ class="sourceCode javascript"><code class="sourceCode javascript"><span id="cb3-
 <span id="cb3-6"><a href="#cb3-6" aria-hidden="true" tabindex="-1"></a>  }</span>
 <span id="cb3-7"><a href="#cb3-7" aria-hidden="true" tabindex="-1"></a>  <span class="co">// Process transfer...</span></span>
 <span id="cb3-8"><a href="#cb3-8" aria-hidden="true" tabindex="-1"></a>})<span class="op">;</span></span></code></pre></div>
-<p>However, this is not a reliable defense because: 1. The
-<code>Referer</code> header might be stripped by browsers or network
-proxies for privacy reasons 2. Users or browser extensions might disable
-sending the <code>Referer</code> header 3. Sites can opt out of sending
-the <code>Referer</code> header using the <code>Referrer-Policy</code>
-header 4. HTTP caches might serve cached responses without checking the
-<code>Referer</code> 5. The header can potentially be spoofed by
-attackers in some scenarios</p>
-<h3 id="samesite-cookies"><code>SameSite</code> Cookies</h3>
-<p>A more robust solution is to use the <code>SameSite</code> cookie
-attribute, which tells browsers when they should include cookies in
-cross-site requests:</p>
-<pre class="http"><code>Set-Cookie: sessionId=abc123; SameSite=Lax</code></pre>
-<p>The <code>SameSite</code> attribute has three possible values: -
-<code>None</code>: Always send cookies (this was the default before
-2020) - <code>Lax</code>: Send cookies for top-level navigations (like
-clicking links) but not for sub-resource requests (like images, frames,
-or form submissions) - <code>Strict</code>: Only send cookies if the
-request originates from the same site that set the cookie</p>
-<p>For most applications, <code>SameSite=Lax</code> provides good
-security while maintaining functionality:</p>
-<div class="sourceCode" id="cb5"><pre
-class="sourceCode javascript"><code class="sourceCode javascript"><span id="cb5-1"><a href="#cb5-1" aria-hidden="true" tabindex="-1"></a>res<span class="op">.</span><span class="fu">cookie</span>(<span class="st">&#39;sessionId&#39;</span><span class="op">,</span> sessionId<span class="op">,</span> {</span>
+  <p>However, this is not a reliable defense because: 1. The
+  <code>Referer</code> header might be stripped by browsers or network
+  proxies for privacy reasons 2. Users or browser extensions might
+  disable sending the <code>Referer</code> header 3. Sites can opt out
+  of sending the <code>Referer</code> header using the
+  <code>Referrer-Policy</code> header 4. HTTP caches might serve cached
+  responses without checking the <code>Referer</code> 5. The header can
+  potentially be spoofed by attackers in some scenarios</p>
+  <h3 id="samesite-cookies"><code>SameSite</code> Cookies</h3>
+  <p>A more robust solution is to use the <code>SameSite</code> cookie
+  attribute, which tells browsers when they should include cookies in
+  cross-site requests:</p>
+  <pre class="http"><code>Set-Cookie: sessionId=abc123; SameSite=Lax</code></pre>
+  <p>The <code>SameSite</code> attribute has three possible values: -
+  <code>None</code>: Always send cookies (this was the default before
+  2020) - <code>Lax</code>: Send cookies for top-level navigations (like
+  clicking links) but not for sub-resource requests (like images,
+  frames, or form submissions) - <code>Strict</code>: Only send cookies
+  if the request originates from the same site that set the cookie</p>
+  <p>For most applications, <code>SameSite=Lax</code> provides good
+  security while maintaining functionality:</p>
+  <div class="sourceCode" id="cb5"><pre
+  class="sourceCode javascript"><code class="sourceCode javascript"><span id="cb5-1"><a href="#cb5-1" aria-hidden="true" tabindex="-1"></a>res<span class="op">.</span><span class="fu">cookie</span>(<span class="st">&#39;sessionId&#39;</span><span class="op">,</span> sessionId<span class="op">,</span> {</span>
 <span id="cb5-2"><a href="#cb5-2" aria-hidden="true" tabindex="-1"></a>  <span class="dt">httpOnly</span><span class="op">:</span> <span class="kw">true</span><span class="op">,</span>   <span class="co">// Prevent JavaScript access</span></span>
 <span id="cb5-3"><a href="#cb5-3" aria-hidden="true" tabindex="-1"></a>  <span class="dt">secure</span><span class="op">:</span> <span class="kw">true</span><span class="op">,</span>     <span class="co">// Require HTTPS</span></span>
 <span id="cb5-4"><a href="#cb5-4" aria-hidden="true" tabindex="-1"></a>  <span class="dt">sameSite</span><span class="op">:</span> <span class="st">&#39;lax&#39;</span><span class="op">,</span>  <span class="co">// CSRF protection</span></span>
 <span id="cb5-5"><a href="#cb5-5" aria-hidden="true" tabindex="-1"></a>  <span class="dt">path</span><span class="op">:</span> <span class="st">&#39;/&#39;</span></span>
 <span id="cb5-6"><a href="#cb5-6" aria-hidden="true" tabindex="-1"></a>})<span class="op">;</span></span></code></pre></div>
-<p>With <code>SameSite=Lax</code>, the CSRF attack described earlier
-would fail because the browser would not include the victim’s
-<code>bank.com</code> cookies when <code>attacker.com</code> submits the
-form.</p>
-<p>Some legitimate use cases might require <code>SameSite=None</code>
-(which must be paired with <code>Secure</code>): - Social media embeds
-(like Facebook comments) - Third-party payment processing widgets -
-Single sign-on across different subdomains - Third-party API
-integrations</p>
-<p>If you need <code>SameSite=None</code>, you should implement
-additional protections like CSRF tokens.</p>
-<h3 id="csrf-tokens">CSRF Tokens</h3>
-<p>A CSRF token is a random value that your server generates and
-includes in forms. When the form is submitted, the server verifies that
-the token in the request matches the one it generated. Since an attacker
-can’t predict the CSRF token, and can’t read it from the HTML on a page
-due to Same-Origin Policy, they will be able to include the correct
-token in a forged form submission.</p>
-<p>Here’s how to implement CSRF tokens:</p>
-<div class="sourceCode" id="cb6"><pre
-class="sourceCode javascript"><code class="sourceCode javascript"><span id="cb6-1"><a href="#cb6-1" aria-hidden="true" tabindex="-1"></a><span class="co">// Generate token when rendering the form</span></span>
+  <p>With <code>SameSite=Lax</code>, the CSRF attack described earlier
+  would fail because the browser would not include the victim’s
+  <code>bank.com</code> cookies when <code>attacker.com</code> submits
+  the form.</p>
+  <p>Some legitimate use cases might require <code>SameSite=None</code>
+  (which must be paired with <code>Secure</code>): - Social media embeds
+  (like Facebook comments) - Third-party payment processing widgets -
+  Single sign-on across different subdomains - Third-party API
+  integrations</p>
+  <p>If you need <code>SameSite=None</code>, you should implement
+  additional protections like CSRF tokens.</p>
+  <h3 id="csrf-tokens">CSRF Tokens</h3>
+  <p>A CSRF token is a random value that your server generates and
+  includes in forms. When the form is submitted, the server verifies
+  that the token in the request matches the one it generated. Since an
+  attacker can’t predict the CSRF token, and can’t read it from the HTML
+  on a page due to Same-Origin Policy, they will be able to include the
+  correct token in a forged form submission.</p>
+  <p>Here’s how to implement CSRF tokens:</p>
+  <div class="sourceCode" id="cb6"><pre
+  class="sourceCode javascript"><code class="sourceCode javascript"><span id="cb6-1"><a href="#cb6-1" aria-hidden="true" tabindex="-1"></a><span class="co">// Generate token when rendering the form</span></span>
 <span id="cb6-2"><a href="#cb6-2" aria-hidden="true" tabindex="-1"></a>app<span class="op">.</span><span class="fu">get</span>(<span class="st">&#39;/transfer&#39;</span><span class="op">,</span> (req<span class="op">,</span> res) <span class="kw">=&gt;</span> {</span>
 <span id="cb6-3"><a href="#cb6-3" aria-hidden="true" tabindex="-1"></a>  <span class="kw">const</span> csrfToken <span class="op">=</span> crypto<span class="op">.</span><span class="fu">randomBytes</span>(<span class="dv">32</span>)<span class="op">.</span><span class="fu">toString</span>(<span class="st">&#39;hex&#39;</span>)<span class="op">;</span></span>
 <span id="cb6-4"><a href="#cb6-4" aria-hidden="true" tabindex="-1"></a>  <span class="co">// Store token in session</span></span>
@@ -144,42 +159,45 @@ class="sourceCode javascript"><code class="sourceCode javascript"><span id="cb6-
 <span id="cb6-21"><a href="#cb6-21" aria-hidden="true" tabindex="-1"></a>  }</span>
 <span id="cb6-22"><a href="#cb6-22" aria-hidden="true" tabindex="-1"></a>  <span class="co">// Process transfer...</span></span>
 <span id="cb6-23"><a href="#cb6-23" aria-hidden="true" tabindex="-1"></a>})<span class="op">;</span></span></code></pre></div>
-<h3 id="get-vs-post-requests">GET vs POST Requests</h3>
-<p>Using POST instead of GET for state-changing operations helps prevent
-CSRF in several ways:</p>
-<ol type="1">
-<li><p>Browsers only send GET requests when loading images or navigating
-to URLs. POST requests require either form submission or JavaScript’s
-<code>fetch</code>/<code>XMLHttpRequest</code> APIs. Therefore,
-requiring state-changing requests to be POST requests minimizes the ways
-in which an attacker can forge requests.</p></li>
-<li><p>GET requests are easier to forge because they can be triggered
-by:</p>
-<div class="sourceCode" id="cb7"><pre
-class="sourceCode html"><code class="sourceCode html"><span id="cb7-1"><a href="#cb7-1" aria-hidden="true" tabindex="-1"></a><span class="dt">&lt;</span><span class="kw">img</span><span class="ot"> src</span><span class="op">=</span><span class="st">&quot;http://bank.com/transfer?to=attacker</span><span class="er">&amp;</span><span class="st">amount=1000&quot;</span><span class="dt">&gt;</span></span></code></pre></div></li>
-<li><p>GET requests might be logged by browser history, server logs, and
-proxy servers, potentially exposing sensitive data.</p></li>
-<li><p>Some browsers and networks cache GET requests, which could lead
-to unintended repeated actions.</p></li>
-</ol>
-<p>Therefore, while using POST doesn’t prevent CSRF on its own, it
-reduces the attack surface and follows proper HTTP semantics where GET
-requests should be “safe” and not cause state changes.</p>
-<h2 id="best-practices">Best Practices</h2>
-<ol type="1">
-<li>Use <code>SameSite=Lax</code> cookies by default</li>
-<li>Don’t rely solely on checking the <code>Referer</code> header</li>
-<li>Use POST requests (not GET) for state-changing operations</li>
-<li>Implement proper session management (as covered in Lesson 5)</li>
-<li>Consider additional protections like CSRF tokens for critical
-operations</li>
-<li>Always use HTTPS to prevent cookie theft through network
-attacks</li>
-</ol>
-<p>Modern browsers default to <code>SameSite=Lax</code>, which helps
-prevent CSRF attacks. However, understanding CSRF remains important for:
-- Supporting older browsers - Dealing with legacy systems - Implementing
-cross-origin features safely - Understanding why certain security
-measures exist</p>
-<p>In the next lesson, we’ll explore Cross-Site Scripting (XSS), another
-common web vulnerability that can bypass many CSRF protections.</p>
+  <h3 id="get-vs-post-requests">GET vs POST Requests</h3>
+  <p>Using POST instead of GET for state-changing operations helps
+  prevent CSRF in several ways:</p>
+  <ol type="1">
+  <li><p>Browsers only send GET requests when loading images or
+  navigating to URLs. POST requests require either form submission or
+  JavaScript’s <code>fetch</code>/<code>XMLHttpRequest</code> APIs.
+  Therefore, requiring state-changing requests to be POST requests
+  minimizes the ways in which an attacker can forge requests.</p></li>
+  <li><p>GET requests are easier to forge because they can be triggered
+  by:</p>
+  <div class="sourceCode" id="cb7"><pre
+  class="sourceCode html"><code class="sourceCode html"><span id="cb7-1"><a href="#cb7-1" aria-hidden="true" tabindex="-1"></a><span class="dt">&lt;</span><span class="kw">img</span><span class="ot"> src</span><span class="op">=</span><span class="st">&quot;http://bank.com/transfer?to=attacker</span><span class="er">&amp;</span><span class="st">amount=1000&quot;</span><span class="dt">&gt;</span></span></code></pre></div></li>
+  <li><p>GET requests might be logged by browser history, server logs,
+  and proxy servers, potentially exposing sensitive data.</p></li>
+  <li><p>Some browsers and networks cache GET requests, which could lead
+  to unintended repeated actions.</p></li>
+  </ol>
+  <p>Therefore, while using POST doesn’t prevent CSRF on its own, it
+  reduces the attack surface and follows proper HTTP semantics where GET
+  requests should be “safe” and not cause state changes.</p>
+  <h2 id="best-practices">Best Practices</h2>
+  <ol type="1">
+  <li>Use <code>SameSite=Lax</code> cookies by default</li>
+  <li>Don’t rely solely on checking the <code>Referer</code> header</li>
+  <li>Use POST requests (not GET) for state-changing operations</li>
+  <li>Implement proper session management (as covered in Lesson 5)</li>
+  <li>Consider additional protections like CSRF tokens for critical
+  operations</li>
+  <li>Always use HTTPS to prevent cookie theft through network
+  attacks</li>
+  </ol>
+  <p>Modern browsers default to <code>SameSite=Lax</code>, which helps
+  prevent CSRF attacks. However, understanding CSRF remains important
+  for: - Supporting older browsers - Dealing with legacy systems -
+  Implementing cross-origin features safely - Understanding why certain
+  security measures exist</p>
+  <p>In the next lesson, we’ll explore Cross-Site Scripting (XSS),
+  another common web vulnerability that can bypass many CSRF
+  protections.</p>
+</body>
+</html>

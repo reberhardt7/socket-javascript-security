@@ -1,247 +1,264 @@
-<h1 id="lesson-4-the-same-origin-policy">Lesson 4: The Same-Origin
-Policy</h1>
-<h2 id="introduction">Introduction</h2>
-<p>The Same-Origin Policy (SOP) is the fundamental security model of the
-web. It defines how different web pages can interact with each other,
-acting as a crucial security barrier that prevents malicious websites
-from interfering with legitimate ones.</p>
-<p>Obviously, we need some degree of isolation between websites. It
-shouldn’t be possible for a malicious website to get your bank
-credentials and steal all your money just because you clicked on a shady
-link. However, enabling <em>some</em> interactions between sites is what
-makes the internet so dynamic and exciting:</p>
-<ul>
-<li>Our site should be able to link to <a
-href="https://developer.mozilla.org/en-US/docs/Web/HTML">MDN</a> to
-direct you to resources if you are interested in learning more</li>
-<li>A music blog should be able to embed content from YouTube, Spotify,
-or SoundCloud</li>
-<li>A food blog might want to generate and display maps from Google Maps
-with pins showing the locations of restaurants to visit; that site needs
-to tell Google a list of coordinates to pin on the map</li>
-<li>An e-commerce website may want to embed a Stripe or Paypal payment
-widget in order to facilitate payment without the merchant getting
-credit card info; this site must embed a payment interface from Stripe
-and also be able to receive confirmation of payment once the customer
-has successfully checked out</li>
-</ul>
-<p>Drawing a line between “okay” and “not okay” interactions is not
-easy.</p>
-<p>In addition, we must also define what constitutes a “site”. Should
-pages under <code>medium.com/@alice/</code> be considered under the same
-site as <code>medium.com/@bob/</code>, even though they are published by
-different people using Medium as a publishing platform? Should content
-under <code>reddit.com</code> be considered a different site from
-content under <code>redd.it</code>, even though they are run by the same
-company?</p>
-<p>The Same-Origin Policy defines the answers to these questions.
-Although it may be somewhat arbitrary in how it draws the lines between
-“sites,” and you may be dissatisfied with the answers to the above
-questions, the Same-Origin Policy is essential to define a universal
-security boundary between sites that all browsers enforce.</p>
-<h2 id="what-is-an-origin">What is an Origin?</h2>
-<p>A <a
-href="https://developer.mozilla.org/en-US/docs/Learn/Common_questions/Web_mechanics/What_is_a_URL">URL</a>
-may have several components: a protocol, hostname, port, path, query,
-and fragment:</p>
-<figure>
-<img src="./url.jpeg"
-alt="Diagram showing the components of an example URL" />
-<figcaption aria-hidden="true">Diagram showing the components of an
-example URL</figcaption>
-</figure>
-<p>Many different URLs would fall under the umbrella of a website. The
-term “site” isn’t specifically defined, and reasonable people might
-disagree about where the boundary of a “site” is, so let’s define
-“origin” as a specific technical term.</p>
-<p>An origin is defined by three components: 1. Protocol (e.g., http://
-or https://) 2. Hostname (e.g., example.com) 3. Port number (e.g.,
-:443)</p>
-<p>For example, in the URL
-<code>https://example.com:443/path/page.html</code>: - Protocol:
-<code>https://</code> - Hostname: <code>example.com</code> - Port:
-<code>443</code></p>
-<p>Note that the path (<code>/path/page.html</code>) is NOT part of the
-origin.</p>
-<p>Two URLs have the same origin only if ALL three components match
-exactly. Here are some examples:</p>
-<pre><code>https://example.com/a/      →  https://example.com/b/       ✅ Same origin
+<html>
+<head>
+  <style>
+    body {
+      max-width: 800px;
+      margin-left: auto;
+      margin-right: auto;
+    }
+    img,video {
+      max-width: 100%;
+    }
+  </style>
+</head>
+<body>
+  <h1 id="lesson-4-the-same-origin-policy">Lesson 4: The Same-Origin
+  Policy</h1>
+  <h2 id="introduction">Introduction</h2>
+  <p>The Same-Origin Policy (SOP) is the fundamental security model of
+  the web. It defines how different web pages can interact with each
+  other, acting as a crucial security barrier that prevents malicious
+  websites from interfering with legitimate ones.</p>
+  <p>Obviously, we need some degree of isolation between websites. It
+  shouldn’t be possible for a malicious website to get your bank
+  credentials and steal all your money just because you clicked on a
+  shady link. However, enabling <em>some</em> interactions between sites
+  is what makes the internet so dynamic and exciting:</p>
+  <ul>
+  <li>Our site should be able to link to <a
+  href="https://developer.mozilla.org/en-US/docs/Web/HTML">MDN</a> to
+  direct you to resources if you are interested in learning more</li>
+  <li>A music blog should be able to embed content from YouTube,
+  Spotify, or SoundCloud</li>
+  <li>A food blog might want to generate and display maps from Google
+  Maps with pins showing the locations of restaurants to visit; that
+  site needs to tell Google a list of coordinates to pin on the map</li>
+  <li>An e-commerce website may want to embed a Stripe or Paypal payment
+  widget in order to facilitate payment without the merchant getting
+  credit card info; this site must embed a payment interface from Stripe
+  and also be able to receive confirmation of payment once the customer
+  has successfully checked out</li>
+  </ul>
+  <p>Drawing a line between “okay” and “not okay” interactions is not
+  easy.</p>
+  <p>In addition, we must also define what constitutes a “site”. Should
+  pages under <code>medium.com/@alice/</code> be considered under the
+  same site as <code>medium.com/@bob/</code>, even though they are
+  published by different people using Medium as a publishing platform?
+  Should content under <code>reddit.com</code> be considered a different
+  site from content under <code>redd.it</code>, even though they are run
+  by the same company?</p>
+  <p>The Same-Origin Policy defines the answers to these questions.
+  Although it may be somewhat arbitrary in how it draws the lines
+  between “sites,” and you may be dissatisfied with the answers to the
+  above questions, the Same-Origin Policy is essential to define a
+  universal security boundary between sites that all browsers
+  enforce.</p>
+  <h2 id="what-is-an-origin">What is an Origin?</h2>
+  <p>A <a
+  href="https://developer.mozilla.org/en-US/docs/Learn/Common_questions/Web_mechanics/What_is_a_URL">URL</a>
+  may have several components: a protocol, hostname, port, path, query,
+  and fragment:</p>
+  <figure>
+  <img src="./url.jpeg"
+  alt="Diagram showing the components of an example URL" />
+  <figcaption aria-hidden="true">Diagram showing the components of an
+  example URL</figcaption>
+  </figure>
+  <p>Many different URLs would fall under the umbrella of a website. The
+  term “site” isn’t specifically defined, and reasonable people might
+  disagree about where the boundary of a “site” is, so let’s define
+  “origin” as a specific technical term.</p>
+  <p>An origin is defined by three components: 1. Protocol (e.g.,
+  http:// or https://) 2. Hostname (e.g., example.com) 3. Port number
+  (e.g., :443)</p>
+  <p>For example, in the URL
+  <code>https://example.com:443/path/page.html</code>: - Protocol:
+  <code>https://</code> - Hostname: <code>example.com</code> - Port:
+  <code>443</code></p>
+  <p>Note that the path (<code>/path/page.html</code>) is NOT part of
+  the origin.</p>
+  <p>Two URLs have the same origin only if ALL three components match
+  exactly. Here are some examples:</p>
+  <pre><code>https://example.com/a/      →  https://example.com/b/       ✅ Same origin
 https://example.com/        →  http://example.com/          ❌ Different protocol
 https://example.com/        →  https://www.example.com/     ❌ Different hostname
 https://example.com/        →  https://example.com:8080/    ❌ Different port</code></pre>
-<h2 id="isolation-between-origins">Isolation between origins</h2>
-<p>The same-origin policy states that a webpage from one origin should
-not be able to access or interfere with content from another origin.
-However, this seemingly simple rule becomes complex in practice.</p>
-<p>Let’s examine what different types of cross-origin interactions are
-allowed:</p>
-<ol type="1">
-<li>Links: Can origin A link to origin B? ✅ YES
-<ul>
-<li>This is fundamental to how the web works</li>
-</ul></li>
-<li>Embedding: Can origin A embed origin B? ✅ YES
-<ul>
-<li>Origins can embed other origins using <a
-href="https://developer.mozilla.org/en-US/docs/Web/HTML/Element/iframe">iframes</a>
-(e.g. you can embed <code>youtube.com</code> in your site)</li>
-<li>However, they cannot access the embedded origin’s content via
-JavaScript! Origin A should never be able to determine anything about
-what is displayed in the Origin B iframe. Otherwise, a malicious site
-could embed your bank and see what is displayed.</li>
-</ul></li>
-<li>Forms: Can origin A submit forms to origin B? ✅ YES
-<ul>
-<li>This historical exception enables cross-origin form submissions</li>
-<li>But creates security risks (like CSRF attacks, which we will discuss
-later)</li>
-</ul></li>
-<li>Resources: Can origin A load resources from origin B? ✅ YES
-<ul>
-<li>Images:
-<code>&lt;img src="https://origin-b.com/image.png"&gt;</code></li>
-<li>Stylesheets:
-<code>&lt;link href="https://origin-b.com/styles.css"&gt;</code></li>
-<li>Scripts:
-<code>&lt;script src="https://origin-b.com/script.js"&gt;</code></li>
-</ul></li>
-<li>Data Access: Can origin A read data from origin B? ❌ NO
-<ul>
-<li>JavaScript cannot send <code>fetch</code> requests to other origins
-(or any other type of asynchronous request)</li>
-<li>JavaScript cannot view the contents of images, iframes, or any other
-resources from other origins</li>
-<li>This policy prevents sensitive data leakage.</li>
-</ul></li>
-<li>Modification: Can origin A modify origin B’s content? ❌ NO
-<ul>
-<li><p>If origin B is embedded in an iframe within origin A, origin A
-cannot modify anything in that iframe. Even adjusting CSS styles to make
-origin B match origin A’s style is forbidden.</p></li>
-<li><p>For example, this code would fail:</p>
-<pre><code>const iframe = document.createElement(&#39;iframe&#39;);
+  <h2 id="isolation-between-origins">Isolation between origins</h2>
+  <p>The same-origin policy states that a webpage from one origin should
+  not be able to access or interfere with content from another origin.
+  However, this seemingly simple rule becomes complex in practice.</p>
+  <p>Let’s examine what different types of cross-origin interactions are
+  allowed:</p>
+  <ol type="1">
+  <li>Links: Can origin A link to origin B? ✅ YES
+  <ul>
+  <li>This is fundamental to how the web works</li>
+  </ul></li>
+  <li>Embedding: Can origin A embed origin B? ✅ YES
+  <ul>
+  <li>Origins can embed other origins using <a
+  href="https://developer.mozilla.org/en-US/docs/Web/HTML/Element/iframe">iframes</a>
+  (e.g. you can embed <code>youtube.com</code> in your site)</li>
+  <li>However, they cannot access the embedded origin’s content via
+  JavaScript! Origin A should never be able to determine anything about
+  what is displayed in the Origin B iframe. Otherwise, a malicious site
+  could embed your bank and see what is displayed.</li>
+  </ul></li>
+  <li>Forms: Can origin A submit forms to origin B? ✅ YES
+  <ul>
+  <li>This historical exception enables cross-origin form
+  submissions</li>
+  <li>But creates security risks (like CSRF attacks, which we will
+  discuss later)</li>
+  </ul></li>
+  <li>Resources: Can origin A load resources from origin B? ✅ YES
+  <ul>
+  <li>Images:
+  <code>&lt;img src="https://origin-b.com/image.png"&gt;</code></li>
+  <li>Stylesheets:
+  <code>&lt;link href="https://origin-b.com/styles.css"&gt;</code></li>
+  <li>Scripts:
+  <code>&lt;script src="https://origin-b.com/script.js"&gt;</code></li>
+  </ul></li>
+  <li>Data Access: Can origin A read data from origin B? ❌ NO
+  <ul>
+  <li>JavaScript cannot send <code>fetch</code> requests to other
+  origins (or any other type of asynchronous request)</li>
+  <li>JavaScript cannot view the contents of images, iframes, or any
+  other resources from other origins</li>
+  <li>This policy prevents sensitive data leakage.</li>
+  </ul></li>
+  <li>Modification: Can origin A modify origin B’s content? ❌ NO
+  <ul>
+  <li><p>If origin B is embedded in an iframe within origin A, origin A
+  cannot modify anything in that iframe. Even adjusting CSS styles to
+  make origin B match origin A’s style is forbidden.</p></li>
+  <li><p>For example, this code would fail:</p>
+  <pre><code>const iframe = document.createElement(&#39;iframe&#39;);
 iframe.src = &#39;https://other-site.com&#39;;
 document.body.appendChild(iframe);
 
 // This will fail - cannot access cross-origin content
 iframe.contentDocument.body.style.backgroundColor = &#39;red&#39;;</code></pre></li>
-</ul></li>
-</ol>
-<h2 id="when-the-policy-is-too-broad">When the Policy is Too Broad</h2>
-<p>Sometimes the same-origin policy isn’t restrictive enough,
-particularly when different people control different path prefixes under
-the same domain.</p>
-<p>For example, <code>https://medium.com/@alice/good-page</code> and
-<code>https://medium.com/@bob/evil-page</code> are under the same
-origin. Medium mitigates the security risk by severely limiting the
-content that users can upload (e.g. users cannot add arbitrary
-javascript to their Medium posts). However, many universities host
-student-uploaded content with the same URL structure, and
-<code>https://university.edu/~professor1/gradebook</code> and
-<code>https://university.edu/~student/evil</code> may both contain
-arbitrary content. Website administrators need to be aware of these
-risks, and they must design sites with the Same-Origin Policy in
-mind.</p>
-<h2 id="when-the-policy-is-too-narrow">When the Policy is Too
-Narrow</h2>
-<p>Sometimes the same-origin policy is too restrictive for legitimate
-use cases. For example:</p>
-<ul>
-<li><code>accounts.google.com</code> needs to handle authentication for
-<code>www.google.com</code>, <code>mail.google.com</code>,
-<code>www.youtube.com</code>, and more.</li>
-<li><code>maps.googleapis.com</code> <a
-href="https://developers.google.com/maps/documentation/api-picker">provides
-services</a> for <em>any</em> website to query the human-readable postal
-address for latitude/longitude coordinates, calculate the transit time
-between too coordinates, and more. Arbitrary origins need to be able to
-read these responses using JavaScript.</li>
-</ul>
-<h2 id="relaxing-the-same-origin-policy">Relaxing the Same-Origin
-Policy</h2>
-<h3 id="document.domain">document.domain</h3>
-<p><em>WARNING: Don’t use this, for reasons described below.</em></p>
-<p>The <code>document.domain</code> property allows subdomains of the
-same domain (e.g. <code>login.example.com</code> and
-<code>shop.example.com</code>) to opt into sharing an origin by setting
-their domain to a common parent domain:</p>
-<div class="sourceCode" id="cb3"><pre
-class="sourceCode javascript"><code class="sourceCode javascript"><span id="cb3-1"><a href="#cb3-1" aria-hidden="true" tabindex="-1"></a><span class="co">// On login.example.com</span></span>
+  </ul></li>
+  </ol>
+  <h2 id="when-the-policy-is-too-broad">When the Policy is Too
+  Broad</h2>
+  <p>Sometimes the same-origin policy isn’t restrictive enough,
+  particularly when different people control different path prefixes
+  under the same domain.</p>
+  <p>For example, <code>https://medium.com/@alice/good-page</code> and
+  <code>https://medium.com/@bob/evil-page</code> are under the same
+  origin. Medium mitigates the security risk by severely limiting the
+  content that users can upload (e.g. users cannot add arbitrary
+  javascript to their Medium posts). However, many universities host
+  student-uploaded content with the same URL structure, and
+  <code>https://university.edu/~professor1/gradebook</code> and
+  <code>https://university.edu/~student/evil</code> may both contain
+  arbitrary content. Website administrators need to be aware of these
+  risks, and they must design sites with the Same-Origin Policy in
+  mind.</p>
+  <h2 id="when-the-policy-is-too-narrow">When the Policy is Too
+  Narrow</h2>
+  <p>Sometimes the same-origin policy is too restrictive for legitimate
+  use cases. For example:</p>
+  <ul>
+  <li><code>accounts.google.com</code> needs to handle authentication
+  for <code>www.google.com</code>, <code>mail.google.com</code>,
+  <code>www.youtube.com</code>, and more.</li>
+  <li><code>maps.googleapis.com</code> <a
+  href="https://developers.google.com/maps/documentation/api-picker">provides
+  services</a> for <em>any</em> website to query the human-readable
+  postal address for latitude/longitude coordinates, calculate the
+  transit time between too coordinates, and more. Arbitrary origins need
+  to be able to read these responses using JavaScript.</li>
+  </ul>
+  <h2 id="relaxing-the-same-origin-policy">Relaxing the Same-Origin
+  Policy</h2>
+  <h3 id="document.domain">document.domain</h3>
+  <p><em>WARNING: Don’t use this, for reasons described below.</em></p>
+  <p>The <code>document.domain</code> property allows subdomains of the
+  same domain (e.g. <code>login.example.com</code> and
+  <code>shop.example.com</code>) to opt into sharing an origin by
+  setting their domain to a common parent domain:</p>
+  <div class="sourceCode" id="cb3"><pre
+  class="sourceCode javascript"><code class="sourceCode javascript"><span id="cb3-1"><a href="#cb3-1" aria-hidden="true" tabindex="-1"></a><span class="co">// On login.example.com</span></span>
 <span id="cb3-2"><a href="#cb3-2" aria-hidden="true" tabindex="-1"></a><span class="bu">document</span><span class="op">.</span><span class="at">domain</span> <span class="op">=</span> <span class="st">&quot;example.com&quot;</span><span class="op">;</span></span>
 <span id="cb3-3"><a href="#cb3-3" aria-hidden="true" tabindex="-1"></a></span>
 <span id="cb3-4"><a href="#cb3-4" aria-hidden="true" tabindex="-1"></a><span class="co">// On shop.example.com</span></span>
 <span id="cb3-5"><a href="#cb3-5" aria-hidden="true" tabindex="-1"></a><span class="bu">document</span><span class="op">.</span><span class="at">domain</span> <span class="op">=</span> <span class="st">&quot;example.com&quot;</span><span class="op">;</span></span>
 <span id="cb3-6"><a href="#cb3-6" aria-hidden="true" tabindex="-1"></a></span>
 <span id="cb3-7"><a href="#cb3-7" aria-hidden="true" tabindex="-1"></a><span class="co">// Now they can interact as if same-origin</span></span></code></pre></div>
-<p>Important rules about <code>document.domain</code>: - Both origins
-must explicitly opt-in by setting the property. If
-<code>subdomain.parent.com</code> sets
-<code>document.domain = "parent.com"</code>, but <code>parent.com</code>
-does not <em>explicitly</em> set <code>document.domain</code>, the
-sharing will not work. - You can only set <code>document.domain</code>
-to a parent domain of the current domain. The origin
-<code>evil.com</code> can’t set
-<code>document.domain = "google.com"</code>. - Both origins must set it
-to exactly the same value.</p>
-<p>Example scenarios:</p>
-<table>
-<colgroup>
-<col style="width: 15%" />
-<col style="width: 21%" />
-<col style="width: 15%" />
-<col style="width: 32%" />
-<col style="width: 14%" />
-</colgroup>
-<thead>
-<tr>
-<th>Origin URL</th>
-<th>document.domain</th>
-<th>Target URL</th>
-<th>Target’s document.domain</th>
-<th>Allowed?</th>
-</tr>
-</thead>
-<tbody>
-<tr>
-<td>http://www.example.com/</td>
-<td>“example.com”</td>
-<td>http://payments.example.com/</td>
-<td>“example.com”</td>
-<td>✅ Yes</td>
-</tr>
-<tr>
-<td>http://www.example.com/</td>
-<td>“example.com”</td>
-<td>https://payments.example.com/</td>
-<td>“example.com”</td>
-<td>❌ No - Protocol mismatch</td>
-</tr>
-<tr>
-<td>http://payments.example.com/</td>
-<td>“example.com”</td>
-<td>http://example.com/</td>
-<td>(not set)</td>
-<td>❌ No - Target must opt-in</td>
-</tr>
-</tbody>
-</table>
-<p>⚠️ WARNING: This mechanism is dangerous because <em>any</em>
-subdomain can opt into the shared origin. If
-<code>login.example.com</code> and <code>shop.example.com</code> both
-set <code>document.domain = "example.com"</code>, and an attacker is
-able to somehow gain control of
-e.g. <code>evil.obscure.subdomain.example.com</code>, he can also set
-<code>document.domain = "example.com"</code> and gain access to
-sensitive data. For this reason, <code>document.domain</code> is being
-deprecated in modern browsers.</p>
-<h3 id="the-postmessage-api">The postMessage API</h3>
-<p>The <a
-href="https://developer.mozilla.org/en-US/docs/Web/API/Window/postMessage"><code>postMessage</code>
-API</a> provides a secure channel for cross-origin communication between
-tabs, windows, and iframes. For example, if Origin A embeds Origin B in
-an <code>iframe</code>, we may run the following:</p>
-<div class="sourceCode" id="cb4"><pre
-class="sourceCode javascript"><code class="sourceCode javascript"><span id="cb4-1"><a href="#cb4-1" aria-hidden="true" tabindex="-1"></a><span class="co">// Origin A: Sending a message</span></span>
+  <p>Important rules about <code>document.domain</code>: - Both origins
+  must explicitly opt-in by setting the property. If
+  <code>subdomain.parent.com</code> sets
+  <code>document.domain = "parent.com"</code>, but
+  <code>parent.com</code> does not <em>explicitly</em> set
+  <code>document.domain</code>, the sharing will not work. - You can
+  only set <code>document.domain</code> to a parent domain of the
+  current domain. The origin <code>evil.com</code> can’t set
+  <code>document.domain = "google.com"</code>. - Both origins must set
+  it to exactly the same value.</p>
+  <p>Example scenarios:</p>
+  <table>
+  <colgroup>
+  <col style="width: 15%" />
+  <col style="width: 21%" />
+  <col style="width: 15%" />
+  <col style="width: 32%" />
+  <col style="width: 14%" />
+  </colgroup>
+  <thead>
+  <tr>
+  <th>Origin URL</th>
+  <th>document.domain</th>
+  <th>Target URL</th>
+  <th>Target’s document.domain</th>
+  <th>Allowed?</th>
+  </tr>
+  </thead>
+  <tbody>
+  <tr>
+  <td>http://www.example.com/</td>
+  <td>“example.com”</td>
+  <td>http://payments.example.com/</td>
+  <td>“example.com”</td>
+  <td>✅ Yes</td>
+  </tr>
+  <tr>
+  <td>http://www.example.com/</td>
+  <td>“example.com”</td>
+  <td>https://payments.example.com/</td>
+  <td>“example.com”</td>
+  <td>❌ No - Protocol mismatch</td>
+  </tr>
+  <tr>
+  <td>http://payments.example.com/</td>
+  <td>“example.com”</td>
+  <td>http://example.com/</td>
+  <td>(not set)</td>
+  <td>❌ No - Target must opt-in</td>
+  </tr>
+  </tbody>
+  </table>
+  <p>⚠️ WARNING: This mechanism is dangerous because <em>any</em>
+  subdomain can opt into the shared origin. If
+  <code>login.example.com</code> and <code>shop.example.com</code> both
+  set <code>document.domain = "example.com"</code>, and an attacker is
+  able to somehow gain control of
+  e.g. <code>evil.obscure.subdomain.example.com</code>, he can also set
+  <code>document.domain = "example.com"</code> and gain access to
+  sensitive data. For this reason, <code>document.domain</code> is being
+  deprecated in modern browsers.</p>
+  <h3 id="the-postmessage-api">The postMessage API</h3>
+  <p>The <a
+  href="https://developer.mozilla.org/en-US/docs/Web/API/Window/postMessage"><code>postMessage</code>
+  API</a> provides a secure channel for cross-origin communication
+  between tabs, windows, and iframes. For example, if Origin A embeds
+  Origin B in an <code>iframe</code>, we may run the following:</p>
+  <div class="sourceCode" id="cb4"><pre
+  class="sourceCode javascript"><code class="sourceCode javascript"><span id="cb4-1"><a href="#cb4-1" aria-hidden="true" tabindex="-1"></a><span class="co">// Origin A: Sending a message</span></span>
 <span id="cb4-2"><a href="#cb4-2" aria-hidden="true" tabindex="-1"></a>iframe<span class="op">.</span><span class="at">contentWindow</span><span class="op">.</span><span class="fu">postMessage</span>(data<span class="op">,</span> <span class="st">&#39;https://origin-b.com&#39;</span>)<span class="op">;</span></span>
 <span id="cb4-3"><a href="#cb4-3" aria-hidden="true" tabindex="-1"></a></span>
 <span id="cb4-4"><a href="#cb4-4" aria-hidden="true" tabindex="-1"></a><span class="co">// Origin B: Receiving messages</span></span>
@@ -252,74 +269,75 @@ class="sourceCode javascript"><code class="sourceCode javascript"><span id="cb4-
 <span id="cb4-9"><a href="#cb4-9" aria-hidden="true" tabindex="-1"></a>  <span class="co">// Handle the message</span></span>
 <span id="cb4-10"><a href="#cb4-10" aria-hidden="true" tabindex="-1"></a>  <span class="bu">console</span><span class="op">.</span><span class="fu">log</span>(<span class="bu">event</span><span class="op">.</span><span class="at">data</span>)<span class="op">;</span></span>
 <span id="cb4-11"><a href="#cb4-11" aria-hidden="true" tabindex="-1"></a>})<span class="op">;</span></span></code></pre></div>
-<p>Origin B (in the iframe) may also communicate to Origin A (the
-parent):</p>
-<div class="sourceCode" id="cb5"><pre
-class="sourceCode javascript"><code class="sourceCode javascript"><span id="cb5-1"><a href="#cb5-1" aria-hidden="true" tabindex="-1"></a><span class="co">// Origin A: Receiving messages</span></span>
+  <p>Origin B (in the iframe) may also communicate to Origin A (the
+  parent):</p>
+  <div class="sourceCode" id="cb5"><pre
+  class="sourceCode javascript"><code class="sourceCode javascript"><span id="cb5-1"><a href="#cb5-1" aria-hidden="true" tabindex="-1"></a><span class="co">// Origin A: Receiving messages</span></span>
 <span id="cb5-2"><a href="#cb5-2" aria-hidden="true" tabindex="-1"></a><span class="bu">window</span><span class="op">.</span><span class="fu">addEventListener</span>(<span class="st">&#39;message&#39;</span><span class="op">,</span> <span class="bu">event</span> <span class="kw">=&gt;</span> {</span>
 <span id="cb5-3"><a href="#cb5-3" aria-hidden="true" tabindex="-1"></a>  <span class="cf">if</span> (<span class="bu">event</span><span class="op">.</span><span class="at">origin</span> <span class="op">!==</span> <span class="st">&#39;https://origin-b.com&#39;</span>) <span class="cf">return</span><span class="op">;</span></span>
 <span id="cb5-4"><a href="#cb5-4" aria-hidden="true" tabindex="-1"></a>  <span class="bu">console</span><span class="op">.</span><span class="fu">log</span>(<span class="bu">event</span><span class="op">.</span><span class="at">data</span>)<span class="op">;</span></span>
 <span id="cb5-5"><a href="#cb5-5" aria-hidden="true" tabindex="-1"></a>})</span>
 <span id="cb5-6"><a href="#cb5-6" aria-hidden="true" tabindex="-1"></a><span class="co">// Origin B: Sending a message</span></span>
 <span id="cb5-7"><a href="#cb5-7" aria-hidden="true" tabindex="-1"></a><span class="bu">window</span><span class="op">.</span><span class="at">parent</span><span class="op">.</span><span class="fu">postMessage</span>(data<span class="op">,</span> <span class="st">&#39;https://origin-a.com&#39;</span>)<span class="op">;</span></span></code></pre></div>
-<p>This may be used to safely exchange a wide variety of data between
-origins.</p>
-<p>As an example, <code>shop.example.com</code> may want to display the
-name of a logged-in user. It can register a listener for messages:</p>
-<div class="sourceCode" id="cb6"><pre
-class="sourceCode javascript"><code class="sourceCode javascript"><span id="cb6-1"><a href="#cb6-1" aria-hidden="true" tabindex="-1"></a><span class="bu">window</span><span class="op">.</span><span class="fu">addEventListener</span>(<span class="st">&#39;message&#39;</span><span class="op">,</span> <span class="bu">event</span> <span class="kw">=&gt;</span> {</span>
+  <p>This may be used to safely exchange a wide variety of data between
+  origins.</p>
+  <p>As an example, <code>shop.example.com</code> may want to display
+  the name of a logged-in user. It can register a listener for
+  messages:</p>
+  <div class="sourceCode" id="cb6"><pre
+  class="sourceCode javascript"><code class="sourceCode javascript"><span id="cb6-1"><a href="#cb6-1" aria-hidden="true" tabindex="-1"></a><span class="bu">window</span><span class="op">.</span><span class="fu">addEventListener</span>(<span class="st">&#39;message&#39;</span><span class="op">,</span> <span class="bu">event</span> <span class="kw">=&gt;</span> {</span>
 <span id="cb6-2"><a href="#cb6-2" aria-hidden="true" tabindex="-1"></a>  <span class="cf">if</span> (<span class="bu">event</span><span class="op">.</span><span class="at">origin</span> <span class="op">!==</span> <span class="st">&#39;https://login.example.com&#39;</span>) <span class="cf">return</span><span class="op">;</span></span>
 <span id="cb6-3"><a href="#cb6-3" aria-hidden="true" tabindex="-1"></a>  <span class="fu">setCurrentUser</span>(<span class="bu">event</span><span class="op">.</span><span class="at">data</span><span class="op">.</span><span class="at">name</span>)</span>
 <span id="cb6-4"><a href="#cb6-4" aria-hidden="true" tabindex="-1"></a>})</span></code></pre></div>
-<p>Then, it can embed an iframe to
-<code>https://login.example.com/currentUser</code> which runs:</p>
-<div class="sourceCode" id="cb7"><pre
-class="sourceCode javascript"><code class="sourceCode javascript"><span id="cb7-1"><a href="#cb7-1" aria-hidden="true" tabindex="-1"></a><span class="kw">const</span> data <span class="op">=</span> { <span class="dt">name</span><span class="op">:</span> <span class="st">&#39;Bob Smith&#39;</span> }</span>
+  <p>Then, it can embed an iframe to
+  <code>https://login.example.com/currentUser</code> which runs:</p>
+  <div class="sourceCode" id="cb7"><pre
+  class="sourceCode javascript"><code class="sourceCode javascript"><span id="cb7-1"><a href="#cb7-1" aria-hidden="true" tabindex="-1"></a><span class="kw">const</span> data <span class="op">=</span> { <span class="dt">name</span><span class="op">:</span> <span class="st">&#39;Bob Smith&#39;</span> }</span>
 <span id="cb7-2"><a href="#cb7-2" aria-hidden="true" tabindex="-1"></a><span class="bu">window</span><span class="op">.</span><span class="at">parent</span><span class="op">.</span><span class="fu">postMessage</span>(data<span class="op">,</span> <span class="st">&#39;https://shop.example.com&#39;</span>)</span></code></pre></div>
-<p>⚠️ WARNING: <code>message</code> listeners must always validate the
-source origin of messages. Otherwise, an attacker website
-<code>evil.com</code> could embed <code>shop.example.com</code> and send
-it a <code>postMessage</code> message with false information, causing
-incorrect information to be displayed.</p>
-<p>Similarly, when <em>calling</em> <code>postMessage</code>, senders
-must always specify the intended destination origin. Otherwise, an
-attacker website <code>evil.com</code> could embed
-<code>login.example.com</code>, and if that code did not properly set
-<code>https://shop.example.com</code> as the destination origin, then it
-would send the authentication state to <code>evil.com</code>, resulting
-in data exfiltration.</p>
-<h3 id="cross-origin-resource-sharing-cors">Cross-Origin Resource
-Sharing (CORS)</h3>
-<p>Cross-Origin Resource Sharing (CORS) is a standardized way for
-servers to relax the same-origin policy for their resources. Unlike
-<code>document.domain</code> or <code>postMessage</code>, CORS is
-specifically designed for HTTP requests (like API calls or fetching
-resources).</p>
-<p>As a specific example, let’s imagine that we are building a website
-<code>example.com</code> that wants to display street addresses for some
-latitude/longitude coordinates. Google provides a <a
-href="https://developers.google.com/maps/documentation/geocoding/overview">service</a>
-that allows us to send an HTTP request with latitude/longitude
-coordinates, and they will respond with a human-readable street address.
-We might use that service like this:</p>
-<div class="sourceCode" id="cb8"><pre
-class="sourceCode javascript"><code class="sourceCode javascript"><span id="cb8-1"><a href="#cb8-1" aria-hidden="true" tabindex="-1"></a><span class="co">// On https://example.com</span></span>
+  <p>⚠️ WARNING: <code>message</code> listeners must always validate the
+  source origin of messages. Otherwise, an attacker website
+  <code>evil.com</code> could embed <code>shop.example.com</code> and
+  send it a <code>postMessage</code> message with false information,
+  causing incorrect information to be displayed.</p>
+  <p>Similarly, when <em>calling</em> <code>postMessage</code>, senders
+  must always specify the intended destination origin. Otherwise, an
+  attacker website <code>evil.com</code> could embed
+  <code>login.example.com</code>, and if that code did not properly set
+  <code>https://shop.example.com</code> as the destination origin, then
+  it would send the authentication state to <code>evil.com</code>,
+  resulting in data exfiltration.</p>
+  <h3 id="cross-origin-resource-sharing-cors">Cross-Origin Resource
+  Sharing (CORS)</h3>
+  <p>Cross-Origin Resource Sharing (CORS) is a standardized way for
+  servers to relax the same-origin policy for their resources. Unlike
+  <code>document.domain</code> or <code>postMessage</code>, CORS is
+  specifically designed for HTTP requests (like API calls or fetching
+  resources).</p>
+  <p>As a specific example, let’s imagine that we are building a website
+  <code>example.com</code> that wants to display street addresses for
+  some latitude/longitude coordinates. Google provides a <a
+  href="https://developers.google.com/maps/documentation/geocoding/overview">service</a>
+  that allows us to send an HTTP request with latitude/longitude
+  coordinates, and they will respond with a human-readable street
+  address. We might use that service like this:</p>
+  <div class="sourceCode" id="cb8"><pre
+  class="sourceCode javascript"><code class="sourceCode javascript"><span id="cb8-1"><a href="#cb8-1" aria-hidden="true" tabindex="-1"></a><span class="co">// On https://example.com</span></span>
 <span id="cb8-2"><a href="#cb8-2" aria-hidden="true" tabindex="-1"></a><span class="fu">fetch</span>(<span class="st">&#39;https://maps.googleapis.com/maps/api/geocode/json?address=1600+Amphitheatre+Parkway,+Mountain+View,+CA&amp;key=YOUR_API_KEY&#39;</span>)</span>
 <span id="cb8-3"><a href="#cb8-3" aria-hidden="true" tabindex="-1"></a>  <span class="op">.</span><span class="fu">then</span>(response <span class="kw">=&gt;</span> response<span class="op">.</span><span class="fu">json</span>())</span>
 <span id="cb8-4"><a href="#cb8-4" aria-hidden="true" tabindex="-1"></a>  <span class="op">.</span><span class="fu">then</span>(data <span class="kw">=&gt;</span> {</span>
 <span id="cb8-5"><a href="#cb8-5" aria-hidden="true" tabindex="-1"></a>    <span class="bu">console</span><span class="op">.</span><span class="fu">log</span>(<span class="st">&#39;Geocoding results:&#39;</span><span class="op">,</span> data)<span class="op">;</span></span>
 <span id="cb8-6"><a href="#cb8-6" aria-hidden="true" tabindex="-1"></a>  })</span>
 <span id="cb8-7"><a href="#cb8-7" aria-hidden="true" tabindex="-1"></a>  <span class="op">.</span><span class="fu">catch</span>(error <span class="kw">=&gt;</span> <span class="bu">console</span><span class="op">.</span><span class="fu">error</span>(<span class="st">&#39;CORS error:&#39;</span><span class="op">,</span> error))<span class="op">;</span></span></code></pre></div>
-<p>However, according to the Same-Origin Policy, we would not be able to
-read the results of this request, because
-<code>https://example.com</code> and
-<code>https://maps.googleapis.com</code> are different origins.</p>
-<p>In order to allow this behavior, the operators of
-<code>https://maps.googleapis.com</code> must explicitly allow our
-origin to read the response by sending a CORS
-<code>Access-Control-Allow-Origin</code> HTTP response header in their
-response:</p>
-<pre class="http"><code>HTTP/1.1 200 OK
+  <p>However, according to the Same-Origin Policy, we would not be able
+  to read the results of this request, because
+  <code>https://example.com</code> and
+  <code>https://maps.googleapis.com</code> are different origins.</p>
+  <p>In order to allow this behavior, the operators of
+  <code>https://maps.googleapis.com</code> must explicitly allow our
+  origin to read the response by sending a CORS
+  <code>Access-Control-Allow-Origin</code> HTTP response header in their
+  response:</p>
+  <pre class="http"><code>HTTP/1.1 200 OK
 Content-Type: application/json
 Access-Control-Allow-Origin: https://example.com
 ... other HTTP response headers ...
@@ -329,16 +347,16 @@ Access-Control-Allow-Origin: https://example.com
     ...
   ]
 }</code></pre>
-<p>A server may also return <code>Access-Control-Allow-Origin: *</code>
-to allow <em>any</em> origin to read its responses. This disables the
-Same-Origin Policy for those responses, so it should be used with
-caution.</p>
-<p>⚠️ WARNING: The Same-Origin Policy prevents an origin from
-<em>reading</em> the response from a different origin without the
-necessary CORS headers. However, it does not prevent <em>sending</em>
-the request. For example, an attacker could embed this code:</p>
-<div class="sourceCode" id="cb10"><pre
-class="sourceCode javascript"><code class="sourceCode javascript"><span id="cb10-1"><a href="#cb10-1" aria-hidden="true" tabindex="-1"></a><span class="co">// On attacker.com</span></span>
+  <p>A server may also return
+  <code>Access-Control-Allow-Origin: *</code> to allow <em>any</em>
+  origin to read its responses. This disables the Same-Origin Policy for
+  those responses, so it should be used with caution.</p>
+  <p>⚠️ WARNING: The Same-Origin Policy prevents an origin from
+  <em>reading</em> the response from a different origin without the
+  necessary CORS headers. However, it does not prevent <em>sending</em>
+  the request. For example, an attacker could embed this code:</p>
+  <div class="sourceCode" id="cb10"><pre
+  class="sourceCode javascript"><code class="sourceCode javascript"><span id="cb10-1"><a href="#cb10-1" aria-hidden="true" tabindex="-1"></a><span class="co">// On attacker.com</span></span>
 <span id="cb10-2"><a href="#cb10-2" aria-hidden="true" tabindex="-1"></a><span class="fu">fetch</span>(<span class="st">&#39;https://api.bank.com/transfer&#39;</span><span class="op">,</span> {</span>
 <span id="cb10-3"><a href="#cb10-3" aria-hidden="true" tabindex="-1"></a>  <span class="dt">method</span><span class="op">:</span> <span class="st">&#39;POST&#39;</span><span class="op">,</span></span>
 <span id="cb10-4"><a href="#cb10-4" aria-hidden="true" tabindex="-1"></a>  <span class="dt">credentials</span><span class="op">:</span> <span class="st">&#39;include&#39;</span><span class="op">,</span></span>
@@ -347,40 +365,42 @@ class="sourceCode javascript"><code class="sourceCode javascript"><span id="cb10
 <span id="cb10-7"><a href="#cb10-7" aria-hidden="true" tabindex="-1"></a>    <span class="dt">amount</span><span class="op">:</span> <span class="st">&#39;1000000&#39;</span></span>
 <span id="cb10-8"><a href="#cb10-8" aria-hidden="true" tabindex="-1"></a>  })</span>
 <span id="cb10-9"><a href="#cb10-9" aria-hidden="true" tabindex="-1"></a>})<span class="op">;</span></span></code></pre></div>
-<p>Even if the response does not include CORS headers in the response,
-and even though <code>attacker.com</code> will not be able to view the
-response information, any side effects resulting from this request will
-still take place (e.g. transfer of funds). As a result, you must be
-careful with designing API endpoints that cause state changes. We will
-discuss this in Lesson 6 (Cross-Site Request Forgery).</p>
-<h2 id="automatic-exceptions">Automatic Exceptions</h2>
-<p>While there are mechanisms to explicitly opt-out of the protections
-of the Same-Origin Policy, there are also several built-in exceptions
-that you must be aware of. By default, cross-origin requests are allowed
-for:</p>
-<ol type="1">
-<li>Loading images (via <code>&lt;img&gt;</code> tags)</li>
-<li>Loading CSS stylesheets (via <code>&lt;link&gt;</code> tags)</li>
-<li>Loading scripts (via <code>&lt;script&gt;</code> tags)</li>
-<li>Form submissions</li>
-<li>Embedding content (via <code>&lt;iframe&gt;</code> tags)</li>
-</ol>
-<p>While these exceptions enable core web functionality, they can also
-create security risks:</p>
-<ul>
-<li>Images/resources may leak information via cookies</li>
-<li>Forms enable CSRF attacks</li>
-<li>Embedded content enables clickjacking</li>
-</ul>
-<p>We will discuss these risks in future lessons.</p>
-<h2 id="summary">Summary</h2>
-<p>The Same-Origin Policy is a fundamental security mechanism that
-designates the boundary between sites and isolates content from
-different sites. It defines an origin as the combination of protocol,
-hostname, and port, and prevents malicious websites from accessing or
-modifying content from legitimate sites. While the policy allows some
-interactions like linking and embedding resources, it blocks potentially
-dangerous operations like reading data or modifying content across
-origins. When cross-origin communication is necessary, developers can
-use controlled mechanisms like the postMessage API or CORS headers to
-safely enable specific interactions.</p>
+  <p>Even if the response does not include CORS headers in the response,
+  and even though <code>attacker.com</code> will not be able to view the
+  response information, any side effects resulting from this request
+  will still take place (e.g. transfer of funds). As a result, you must
+  be careful with designing API endpoints that cause state changes. We
+  will discuss this in Lesson 6 (Cross-Site Request Forgery).</p>
+  <h2 id="automatic-exceptions">Automatic Exceptions</h2>
+  <p>While there are mechanisms to explicitly opt-out of the protections
+  of the Same-Origin Policy, there are also several built-in exceptions
+  that you must be aware of. By default, cross-origin requests are
+  allowed for:</p>
+  <ol type="1">
+  <li>Loading images (via <code>&lt;img&gt;</code> tags)</li>
+  <li>Loading CSS stylesheets (via <code>&lt;link&gt;</code> tags)</li>
+  <li>Loading scripts (via <code>&lt;script&gt;</code> tags)</li>
+  <li>Form submissions</li>
+  <li>Embedding content (via <code>&lt;iframe&gt;</code> tags)</li>
+  </ol>
+  <p>While these exceptions enable core web functionality, they can also
+  create security risks:</p>
+  <ul>
+  <li>Images/resources may leak information via cookies</li>
+  <li>Forms enable CSRF attacks</li>
+  <li>Embedded content enables clickjacking</li>
+  </ul>
+  <p>We will discuss these risks in future lessons.</p>
+  <h2 id="summary">Summary</h2>
+  <p>The Same-Origin Policy is a fundamental security mechanism that
+  designates the boundary between sites and isolates content from
+  different sites. It defines an origin as the combination of protocol,
+  hostname, and port, and prevents malicious websites from accessing or
+  modifying content from legitimate sites. While the policy allows some
+  interactions like linking and embedding resources, it blocks
+  potentially dangerous operations like reading data or modifying
+  content across origins. When cross-origin communication is necessary,
+  developers can use controlled mechanisms like the postMessage API or
+  CORS headers to safely enable specific interactions.</p>
+</body>
+</html>

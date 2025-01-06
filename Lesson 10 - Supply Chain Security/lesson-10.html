@@ -1,77 +1,93 @@
-<h1 id="lesson-10-supply-chain-security">Lesson 10: Supply Chain
-Security</h1>
-<h2 id="introduction">Introduction</h2>
-<p>Modern web applications are built on a foundation of open-source
-packages. While this accelerates development and promotes code reuse, it
-also creates security risks; your application is only as secure as its
-weakest dependency.</p>
-<p>Attackers are increasingly targeting open-source dependencies,
-seeking to have malicious code added to these libraries, instead of
-directly attacking applications. If they are able to compromise a
-dependency that is used in many different applications, then one
-successful attack yields much more reward for the attacker. These types
-of attacks are often referred to as “software supply-chain attacks.”</p>
-<p>Package registries face a constant stream of malicious packages;
-security researchers report finding <a
-href="https://socket.dev/blog/risky-biz-podcast-how-socket-goes-beyond-vulnerabilities-to-tackle-modern-supply-chain-attacks">around
-100 new supply chain attacks per week</a> across major ecosystems like
-npm, PyPI, and Maven. While the majority of these malicious packages
-have relatively few downloads (often under 50), an attacker only needs
-to trick one person into installing their package in order to execute an
-attack.</p>
-<p>When a malicious package is installed, an attacker can: - Exfiltrate
-data from the production application (stealing environment variables,
-secrets, etc.) - Inject cryptocurrency miners - Execute ransomware -
-Inject backdoors into the application - Install malware on developers’
-local machines</p>
-<h2 id="supply-chain-attack-vectors">Supply chain attack vectors</h2>
-<p>There are several different ways that an attacker might get malicious
-code included in an application.</p>
-<ol type="1">
-<li><p><strong>Typosquatting</strong>: An attacker might register
-package names similar to popular packages, hoping that a developer will
-make a typographical error when running <code>npm install</code>. For
-example, they might register <code>loadash</code> instead of
-<code>lodash</code>, <code>express-js</code> instead of
-<code>express</code>, or <code>reactdom</code> instead of
-<code>react-dom</code>.</p></li>
-<li><p><strong>Dependency Confusion</strong>: An attacker might exploit
-how package managers resolve names between private and public
-registries. If they notice a company’s <em>internal</em> package name
-(i.e. not registered publicly) in public source code, they may register
-that package on the public NPM registry. Then, when <code>npm</code>
-next installs the dependencies for a project, it will resolve to the
-library from the public NPM registry instead of the company’s internal
-registry. A writeup of such an example attack is available <a
-href="https://medium.com/@alex.birsan/dependency-confusion-4a5d60fec610">here</a>.</p></li>
-<li><p><strong>Account Compromise</strong>: An attacker may gain access
-to a maintainer’s account to publish malicious versions of a library,
-e.g. via phishing or <a
-href="https://socket.dev/blog/pypi-on-ultralytics-breach-no-security-flaws-in-pypi-exploited">CI
-credential compromise</a>.</p></li>
-<li><p><strong>Maintainer Burnout</strong>: An attacker may target
-overburdened maintainers, offering to make legitimate contributions to
-help maintain a project, then pushing malicious code after gaining
-trust. This is what happened in the famous <a
-href="https://cyberscoop.com/open-source-security-trust-xz-utils/">xz-utils
-attack</a>, where a bad actor spent two years making legitimate
-contributions, gaining trust and control, before inserting a backdoor.
-<a
-href="https://socket.dev/blog/the-unpaid-backbone-of-open-source">Open-source
-maintainers frequently face burnout</a>, and in extreme cases, <a
-href="https://socket.dev/blog/ldapjs-open-source-project-decommissioned-after-maintainer-receives-abusive-email">even
-receive harassment</a>, making open-source projects more vulnerable to
-this attack vector.</p></li>
-</ol>
-<h2 id="defense-strategies">Defense Strategies</h2>
-<h3 id="use-lock-files-and-precise-versions">Use Lock Files and Precise
-Versions</h3>
-<p>Lock files are critical for security because they ensure all
-developers and environments use exactly the same package versions. The
-NPM lock file records exact package versions and cryptographic hashes
-for all dependencies used in a project:</p>
-<div class="sourceCode" id="cb1"><pre
-class="sourceCode json"><code class="sourceCode json"><span id="cb1-1"><a href="#cb1-1" aria-hidden="true" tabindex="-1"></a><span class="fu">{</span></span>
+<html>
+<head>
+  <style>
+    body {
+      max-width: 800px;
+      margin-left: auto;
+      margin-right: auto;
+    }
+    img,video {
+      max-width: 100%;
+    }
+  </style>
+</head>
+<body>
+  <h1 id="lesson-10-supply-chain-security">Lesson 10: Supply Chain
+  Security</h1>
+  <h2 id="introduction">Introduction</h2>
+  <p>Modern web applications are built on a foundation of open-source
+  packages. While this accelerates development and promotes code reuse,
+  it also creates security risks; your application is only as secure as
+  its weakest dependency.</p>
+  <p>Attackers are increasingly targeting open-source dependencies,
+  seeking to have malicious code added to these libraries, instead of
+  directly attacking applications. If they are able to compromise a
+  dependency that is used in many different applications, then one
+  successful attack yields much more reward for the attacker. These
+  types of attacks are often referred to as “software supply-chain
+  attacks.”</p>
+  <p>Package registries face a constant stream of malicious packages;
+  security researchers report finding <a
+  href="https://socket.dev/blog/risky-biz-podcast-how-socket-goes-beyond-vulnerabilities-to-tackle-modern-supply-chain-attacks">around
+  100 new supply chain attacks per week</a> across major ecosystems like
+  npm, PyPI, and Maven. While the majority of these malicious packages
+  have relatively few downloads (often under 50), an attacker only needs
+  to trick one person into installing their package in order to execute
+  an attack.</p>
+  <p>When a malicious package is installed, an attacker can: -
+  Exfiltrate data from the production application (stealing environment
+  variables, secrets, etc.) - Inject cryptocurrency miners - Execute
+  ransomware - Inject backdoors into the application - Install malware
+  on developers’ local machines</p>
+  <h2 id="supply-chain-attack-vectors">Supply chain attack vectors</h2>
+  <p>There are several different ways that an attacker might get
+  malicious code included in an application.</p>
+  <ol type="1">
+  <li><p><strong>Typosquatting</strong>: An attacker might register
+  package names similar to popular packages, hoping that a developer
+  will make a typographical error when running <code>npm install</code>.
+  For example, they might register <code>loadash</code> instead of
+  <code>lodash</code>, <code>express-js</code> instead of
+  <code>express</code>, or <code>reactdom</code> instead of
+  <code>react-dom</code>.</p></li>
+  <li><p><strong>Dependency Confusion</strong>: An attacker might
+  exploit how package managers resolve names between private and public
+  registries. If they notice a company’s <em>internal</em> package name
+  (i.e. not registered publicly) in public source code, they may
+  register that package on the public NPM registry. Then, when
+  <code>npm</code> next installs the dependencies for a project, it will
+  resolve to the library from the public NPM registry instead of the
+  company’s internal registry. A writeup of such an example attack is
+  available <a
+  href="https://medium.com/@alex.birsan/dependency-confusion-4a5d60fec610">here</a>.</p></li>
+  <li><p><strong>Account Compromise</strong>: An attacker may gain
+  access to a maintainer’s account to publish malicious versions of a
+  library, e.g. via phishing or <a
+  href="https://socket.dev/blog/pypi-on-ultralytics-breach-no-security-flaws-in-pypi-exploited">CI
+  credential compromise</a>.</p></li>
+  <li><p><strong>Maintainer Burnout</strong>: An attacker may target
+  overburdened maintainers, offering to make legitimate contributions to
+  help maintain a project, then pushing malicious code after gaining
+  trust. This is what happened in the famous <a
+  href="https://cyberscoop.com/open-source-security-trust-xz-utils/">xz-utils
+  attack</a>, where a bad actor spent two years making legitimate
+  contributions, gaining trust and control, before inserting a backdoor.
+  <a
+  href="https://socket.dev/blog/the-unpaid-backbone-of-open-source">Open-source
+  maintainers frequently face burnout</a>, and in extreme cases, <a
+  href="https://socket.dev/blog/ldapjs-open-source-project-decommissioned-after-maintainer-receives-abusive-email">even
+  receive harassment</a>, making open-source projects more vulnerable to
+  this attack vector.</p></li>
+  </ol>
+  <h2 id="defense-strategies">Defense Strategies</h2>
+  <h3 id="use-lock-files-and-precise-versions">Use Lock Files and
+  Precise Versions</h3>
+  <p>Lock files are critical for security because they ensure all
+  developers and environments use exactly the same package versions. The
+  NPM lock file records exact package versions and cryptographic hashes
+  for all dependencies used in a project:</p>
+  <div class="sourceCode" id="cb1"><pre
+  class="sourceCode json"><code class="sourceCode json"><span id="cb1-1"><a href="#cb1-1" aria-hidden="true" tabindex="-1"></a><span class="fu">{</span></span>
 <span id="cb1-2"><a href="#cb1-2" aria-hidden="true" tabindex="-1"></a>  <span class="dt">&quot;dependencies&quot;</span><span class="fu">:</span> <span class="fu">{</span></span>
 <span id="cb1-3"><a href="#cb1-3" aria-hidden="true" tabindex="-1"></a>    <span class="dt">&quot;express&quot;</span><span class="fu">:</span> <span class="fu">{</span></span>
 <span id="cb1-4"><a href="#cb1-4" aria-hidden="true" tabindex="-1"></a>      <span class="dt">&quot;version&quot;</span><span class="fu">:</span> <span class="st">&quot;4.18.2&quot;</span><span class="fu">,</span></span>
@@ -84,60 +100,64 @@ class="sourceCode json"><code class="sourceCode json"><span id="cb1-1"><a href="
 <span id="cb1-11"><a href="#cb1-11" aria-hidden="true" tabindex="-1"></a>    <span class="fu">}</span></span>
 <span id="cb1-12"><a href="#cb1-12" aria-hidden="true" tabindex="-1"></a>  <span class="fu">}</span></span>
 <span id="cb1-13"><a href="#cb1-13" aria-hidden="true" tabindex="-1"></a><span class="fu">}</span></span></code></pre></div>
-<p>The pinned version will ensure that a production deployment does not
-automatically start using a new package version before engineers have
-had a chance to test and screen it. The <code>integrity</code> hash
-ensures that the dependency does not secretly change, which prevents an
-attacker from serving different variants of the same package version,
-e.g. it would be bad if a security auditor received a different set of
-source code from a production server running the library. This also
-helps to mitigate dependency confusion attacks.</p>
-<p>Lock files should <em>always</em> be committed to version control to
-ensure that everyone is using the same dependency source code.</p>
-<h3 id="minimize-dependencies">Minimize Dependencies</h3>
-<p>Each added dependency increases the supply chain attack surface of a
-project, so developers should seek to minimize the number of
-dependencies in use. This can be difficult; a project might use a small
-number of packages directly, but if those packages themselves use many
-dependencies, then in total, the project might depend on a large number
-of packages transitively.</p>
-<p>The following tips may help with minimizing dependencies: * When
-choosing libraries, prefer libraries that have a smaller number of
-dependencies * Run tools like <a
-href="https://www.npmjs.com/package/depcheck">depcheck</a> to prune
-unused dependencies from <code>package.json</code> * Run tools like <a
-href="https://socket.dev/blog/introducing-socket-optimize">socket-optimize</a>
-to reduce the count of transitive dependencies</p>
-<h3 id="use-dependency-scanning-and-monitoring-tools">Use Dependency
-Scanning and Monitoring Tools</h3>
-<p>Node.js provides an <code>npm audit</code> command to check for known
-vulnerabilities in dependencies. This command can be run in CI scripts
-to monitor for supply chain risks.</p>
-<p>However, <code>npm audit</code> has significant limitations due to
-the fact that it only checks for packages that have known CVEs. In order
-to have a CVE, someone must have found a vulnerability in a package and
-submitted it to the National Vulnerability Database. It may take days or
-weeks for CVEs to be reported, and typosquat packages generally do not
-have CVEs because the usage of these packages is so low. Also,
-<code>npm audit</code> audits packages that have already been installed,
-and a package with <a
-href="https://socket.dev/alerts/installScripts">install scripts</a> may
-have already compromised the host machine.</p>
-<p>Alternatively, tools like <a href="https://socket.dev/">Socket</a> or
-<a
-href="https://snyk.io/product/open-source-security-management/">Snyk</a>
-scan dependencies in real time for a wider range of signals, such as
-changes in maintainership, addition of network APIs to packages that
-didn’t use them previously, typosquat likelihood, and AI-detected
-malware alerts. These tools can block malicious packages before they are
-installed and before CVEs are reported.</p>
-<h2 id="summary">Summary</h2>
-<p>The software supply chain represents a critical attack surface that
-traditional security tools often miss. Attackers increasingly target
-package registries and dependency management systems rather than
-applications directly. Effective defense requires a combination of:</p>
-<ol type="1">
-<li>Technical controls (lock files, security tooling)</li>
-<li>Process controls (dependency reviews, minimizing dependencies)</li>
-<li>Automated tooling (dependency scanners, behavior monitoring)</li>
-</ol>
+  <p>The pinned version will ensure that a production deployment does
+  not automatically start using a new package version before engineers
+  have had a chance to test and screen it. The <code>integrity</code>
+  hash ensures that the dependency does not secretly change, which
+  prevents an attacker from serving different variants of the same
+  package version, e.g. it would be bad if a security auditor received a
+  different set of source code from a production server running the
+  library. This also helps to mitigate dependency confusion attacks.</p>
+  <p>Lock files should <em>always</em> be committed to version control
+  to ensure that everyone is using the same dependency source code.</p>
+  <h3 id="minimize-dependencies">Minimize Dependencies</h3>
+  <p>Each added dependency increases the supply chain attack surface of
+  a project, so developers should seek to minimize the number of
+  dependencies in use. This can be difficult; a project might use a
+  small number of packages directly, but if those packages themselves
+  use many dependencies, then in total, the project might depend on a
+  large number of packages transitively.</p>
+  <p>The following tips may help with minimizing dependencies: * When
+  choosing libraries, prefer libraries that have a smaller number of
+  dependencies * Run tools like <a
+  href="https://www.npmjs.com/package/depcheck">depcheck</a> to prune
+  unused dependencies from <code>package.json</code> * Run tools like <a
+  href="https://socket.dev/blog/introducing-socket-optimize">socket-optimize</a>
+  to reduce the count of transitive dependencies</p>
+  <h3 id="use-dependency-scanning-and-monitoring-tools">Use Dependency
+  Scanning and Monitoring Tools</h3>
+  <p>Node.js provides an <code>npm audit</code> command to check for
+  known vulnerabilities in dependencies. This command can be run in CI
+  scripts to monitor for supply chain risks.</p>
+  <p>However, <code>npm audit</code> has significant limitations due to
+  the fact that it only checks for packages that have known CVEs. In
+  order to have a CVE, someone must have found a vulnerability in a
+  package and submitted it to the National Vulnerability Database. It
+  may take days or weeks for CVEs to be reported, and typosquat packages
+  generally do not have CVEs because the usage of these packages is so
+  low. Also, <code>npm audit</code> audits packages that have already
+  been installed, and a package with <a
+  href="https://socket.dev/alerts/installScripts">install scripts</a>
+  may have already compromised the host machine.</p>
+  <p>Alternatively, tools like <a href="https://socket.dev/">Socket</a>
+  or <a
+  href="https://snyk.io/product/open-source-security-management/">Snyk</a>
+  scan dependencies in real time for a wider range of signals, such as
+  changes in maintainership, addition of network APIs to packages that
+  didn’t use them previously, typosquat likelihood, and AI-detected
+  malware alerts. These tools can block malicious packages before they
+  are installed and before CVEs are reported.</p>
+  <h2 id="summary">Summary</h2>
+  <p>The software supply chain represents a critical attack surface that
+  traditional security tools often miss. Attackers increasingly target
+  package registries and dependency management systems rather than
+  applications directly. Effective defense requires a combination
+  of:</p>
+  <ol type="1">
+  <li>Technical controls (lock files, security tooling)</li>
+  <li>Process controls (dependency reviews, minimizing
+  dependencies)</li>
+  <li>Automated tooling (dependency scanners, behavior monitoring)</li>
+  </ol>
+</body>
+</html>
