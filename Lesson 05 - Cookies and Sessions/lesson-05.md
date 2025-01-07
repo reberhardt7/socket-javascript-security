@@ -246,9 +246,9 @@ Mitigation:
 
 1. Use HTTPS everywhere to prevent eavesdropping
 2. Set the `Secure` flag on cookies to prevent them from being sent over HTTP:
-```javascript
-res.cookie('sessionId', sessionId, { secure: true });
-```
+   ```javascript
+   res.cookie('sessionId', sessionId, { secure: true });
+   ```
 
 ### Cross-Site Scripting (XSS)
 
@@ -266,9 +266,9 @@ We will discuss this type of attack in detail in Lesson 7.
 Mitigation:
 
 1. Set the `HttpOnly` flag on session cookies to make them inaccessible to client JavaScript:
-```javascript
-res.cookie('sessionId', sessionId, { httpOnly: true });
-```
+   ```javascript
+   res.cookie('sessionId', sessionId, { httpOnly: true });
+   ```
 2. Implement proper XSS protections (covered in Lesson 7)
 
 ## Historical Context

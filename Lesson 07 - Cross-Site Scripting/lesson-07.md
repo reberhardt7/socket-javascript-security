@@ -294,6 +294,7 @@ These contexts are particularly dangerous because there are too many ways for at
 ### 1. Escape at Render Time
 
 Always escape data when rendering, not when storing or processing. This ensures:
+
 - Data is escaped properly for its context
 - Raw data is preserved in the database
 - Multiple output formats can be supported

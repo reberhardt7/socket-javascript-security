@@ -9,6 +9,10 @@
     img,video {
       max-width: 100%;
     }
+    pre {
+      white-space: pre-wrap;
+      word-wrap: break-word;
+    }
   </style>
   <style type="text/css">
 html { -webkit-text-size-adjust: 100%; }
@@ -381,9 +385,12 @@ code span.wa { color: #60a0b0; font-weight: bold; font-style: italic; } /* Warni
   <h2 id="defense-best-practices">Defense Best Practices</h2>
   <h3 id="escape-at-render-time">1. Escape at Render Time</h3>
   <p>Always escape data when rendering, not when storing or processing.
-  This ensures: - Data is escaped properly for its context - Raw data is
-  preserved in the database - Multiple output formats can be
-  supported</p>
+  This ensures:</p>
+  <ul>
+  <li>Data is escaped properly for its context</li>
+  <li>Raw data is preserved in the database</li>
+  <li>Multiple output formats can be supported</li>
+  </ul>
   <div class="sourceCode" id="cb24"><pre
   class="sourceCode javascript"><code class="sourceCode javascript"><span id="cb24-1"><a href="#cb24-1" aria-hidden="true" tabindex="-1"></a><span class="co">// Bad - escaping at storage time</span></span>
 <span id="cb24-2"><a href="#cb24-2" aria-hidden="true" tabindex="-1"></a>app<span class="op">.</span><span class="fu">post</span>(<span class="st">&#39;/comments&#39;</span><span class="op">,</span> (req<span class="op">,</span> res) <span class="kw">=&gt;</span> {</span>

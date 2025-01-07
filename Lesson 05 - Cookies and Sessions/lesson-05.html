@@ -9,6 +9,10 @@
     img,video {
       max-width: 100%;
     }
+    pre {
+      white-space: pre-wrap;
+      word-wrap: break-word;
+    }
   </style>
   <style type="text/css">
 html { -webkit-text-size-adjust: 100%; }
@@ -352,12 +356,12 @@ Cookie: username=alice</code></pre>
   despite those requests including session cookies.</p>
   <p>Mitigation:</p>
   <ol type="1">
-  <li>Use HTTPS everywhere to prevent eavesdropping</li>
-  <li>Set the <code>Secure</code> flag on cookies to prevent them from
-  being sent over HTTP:</li>
-  </ol>
+  <li><p>Use HTTPS everywhere to prevent eavesdropping</p></li>
+  <li><p>Set the <code>Secure</code> flag on cookies to prevent them
+  from being sent over HTTP:</p>
   <div class="sourceCode" id="cb7"><pre
-  class="sourceCode javascript"><code class="sourceCode javascript"><span id="cb7-1"><a href="#cb7-1" aria-hidden="true" tabindex="-1"></a>res<span class="op">.</span><span class="fu">cookie</span>(<span class="st">&#39;sessionId&#39;</span><span class="op">,</span> sessionId<span class="op">,</span> { <span class="dt">secure</span><span class="op">:</span> <span class="kw">true</span> })<span class="op">;</span></span></code></pre></div>
+  class="sourceCode javascript"><code class="sourceCode javascript"><span id="cb7-1"><a href="#cb7-1" aria-hidden="true" tabindex="-1"></a>res<span class="op">.</span><span class="fu">cookie</span>(<span class="st">&#39;sessionId&#39;</span><span class="op">,</span> sessionId<span class="op">,</span> { <span class="dt">secure</span><span class="op">:</span> <span class="kw">true</span> })<span class="op">;</span></span></code></pre></div></li>
+  </ol>
   <h3 id="cross-site-scripting-xss">Cross-Site Scripting (XSS)</h3>
   <p>Cookies are sent as request headers in every HTTP request. However,
   they are <em>also</em> readable by client-side JavaScript. There are
@@ -372,13 +376,11 @@ Cookie: username=alice</code></pre>
   <p>We will discuss this type of attack in detail in Lesson 7.</p>
   <p>Mitigation:</p>
   <ol type="1">
-  <li>Set the <code>HttpOnly</code> flag on session cookies to make them
-  inaccessible to client JavaScript:</li>
-  </ol>
+  <li><p>Set the <code>HttpOnly</code> flag on session cookies to make
+  them inaccessible to client JavaScript:</p>
   <div class="sourceCode" id="cb9"><pre
-  class="sourceCode javascript"><code class="sourceCode javascript"><span id="cb9-1"><a href="#cb9-1" aria-hidden="true" tabindex="-1"></a>res<span class="op">.</span><span class="fu">cookie</span>(<span class="st">&#39;sessionId&#39;</span><span class="op">,</span> sessionId<span class="op">,</span> { <span class="dt">httpOnly</span><span class="op">:</span> <span class="kw">true</span> })<span class="op">;</span></span></code></pre></div>
-  <ol start="2" type="1">
-  <li>Implement proper XSS protections (covered in Lesson 7)</li>
+  class="sourceCode javascript"><code class="sourceCode javascript"><span id="cb9-1"><a href="#cb9-1" aria-hidden="true" tabindex="-1"></a>res<span class="op">.</span><span class="fu">cookie</span>(<span class="st">&#39;sessionId&#39;</span><span class="op">,</span> sessionId<span class="op">,</span> { <span class="dt">httpOnly</span><span class="op">:</span> <span class="kw">true</span> })<span class="op">;</span></span></code></pre></div></li>
+  <li><p>Implement proper XSS protections (covered in Lesson 7)</p></li>
   </ol>
   <h2 id="historical-context">Historical Context</h2>
   <p>Cookies were implemented in 1994 by Netscape and described in a

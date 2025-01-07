@@ -114,6 +114,7 @@ document.domain = "example.com";
 ```
 
 Important rules about `document.domain`:
+
 - Both origins must explicitly opt-in by setting the property. If `subdomain.parent.com` sets `document.domain = "parent.com"`, but `parent.com` does not _explicitly_ set `document.domain`, the sharing will not work.
 - You can only set `document.domain` to a parent domain of the current domain. The origin `evil.com` can't set `document.domain = "google.com"`.
 - Both origins must set it to exactly the same value.
