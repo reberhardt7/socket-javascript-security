@@ -3,6 +3,7 @@
 ## Introduction
 
 In 2005, a 19-year-old programmer named Samy Kamkar discovered he could add custom JavaScript to his MySpace profile, bypassing the site's security filters. He created what became the first major self-propagating cross-site scripting (XSS) worm. When users viewed his profile, the injected code would:
+
 1. Add Samy as a friend
 2. Add "but most of all, Samy is my hero" to their profile
 3. Copy itself to their profile, attacking anyone who viewed it
@@ -63,6 +64,7 @@ app.get('/search', (req, res) => {
 ```
 
 Attack:
+
 1. Attacker crafts a malicious URL:
    ```
    https://example.com/search?q=<script>alert('xss')</script>
@@ -384,6 +386,7 @@ Content-Security-Policy:
 #### An example CSP
 
 Let's build a policy for a website that needs to:
+
 1. Load its own resources
 2. Use Google Analytics
 3. Load images from a CDN

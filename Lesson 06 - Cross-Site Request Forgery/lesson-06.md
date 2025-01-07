@@ -11,6 +11,7 @@ CSRF is an attack that forces an end user to execute unwanted actions on a websi
 For example, imagine you are logged into your bank at `bank.com` and then visit `attacker.com`. The attacker's site could contain code that causes your browser to make a request to `bank.com/transfer?to=attacker&amount=1000`. Because you are logged in to `bank.com`, your browser will automatically include your authentication cookies with this request. The bank's server sees a valid request with valid authentication cookies and has no reliable way to determine that you didn't intend to make this request.
 
 Common CSRF attacks include:
+
 - Transferring funds from banking/financial sites
 - Changing account email address or password
 - Purchasing items from e-commerce sites
@@ -42,6 +43,7 @@ An attacker could create a malicious page on `attacker.com` containing:
 ```
 
 When a victim who is logged into `bank.com` visits the malicious page:
+
 1. The attacker's JavaScript automatically submits the form to `bank.com`
 2. The browser includes the victim's `bank.com` cookies with the request because cookies are automatically included in cross-origin requests
 3. `bank.com` receives a valid request with valid authentication cookies
@@ -67,6 +69,7 @@ app.post('/transfer', (req, res) => {
 ```
 
 However, this is not a reliable defense because:
+
 1. The `Referer` header might be stripped by browsers or network proxies for privacy reasons
 2. Users or browser extensions might disable sending the `Referer` header
 3. Sites can opt out of sending the `Referer` header using the `Referrer-Policy` header
@@ -100,6 +103,7 @@ res.cookie('sessionId', sessionId, {
 With `SameSite=Lax`, the CSRF attack described earlier would fail because the browser would not include the victim's `bank.com` cookies when `attacker.com` submits the form.
 
 Some legitimate use cases might require `SameSite=None` (which must be paired with `Secure`):
+
 - Social media embeds (like Facebook comments)
 - Third-party payment processing widgets
 - Single sign-on across different subdomains
@@ -166,6 +170,7 @@ Therefore, while using POST doesn't prevent CSRF on its own, it reduces the atta
 6. Always use HTTPS to prevent cookie theft through network attacks
 
 Modern browsers default to `SameSite=Lax`, which helps prevent CSRF attacks. However, understanding CSRF remains important for:
+
 - Supporting older browsers
 - Dealing with legacy systems
 - Implementing cross-origin features safely

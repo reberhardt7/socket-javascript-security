@@ -102,11 +102,15 @@ code span.wa { color: #60a0b0; font-weight: bold; font-style: italic; } /* Warni
   The bank’s server sees a valid request with valid authentication
   cookies and has no reliable way to determine that you didn’t intend to
   make this request.</p>
-  <p>Common CSRF attacks include: - Transferring funds from
-  banking/financial sites - Changing account email address or password -
-  Purchasing items from e-commerce sites - Making posts or sending
-  messages on social media - For admin users: adding new admin accounts
-  or executing privileged actions</p>
+  <p>Common CSRF attacks include:</p>
+  <ul>
+  <li>Transferring funds from banking/financial sites</li>
+  <li>Changing account email address or password</li>
+  <li>Purchasing items from e-commerce sites</li>
+  <li>Making posts or sending messages on social media</li>
+  <li>For admin users: adding new admin accounts or executing privileged
+  actions</li>
+  </ul>
   <h2 id="how-csrf-works">How CSRF Works</h2>
   <p>Let’s examine a concrete example. Consider this legitimate transfer
   form on <code>bank.com</code>:</p>
@@ -127,13 +131,18 @@ code span.wa { color: #60a0b0; font-weight: bold; font-style: italic; } /* Warni
 <span id="cb2-6"><a href="#cb2-6" aria-hidden="true" tabindex="-1"></a>  <span class="bu">document</span><span class="op">.</span><span class="at">forms</span>[<span class="dv">0</span>]<span class="op">.</span><span class="fu">submit</span>()<span class="op">;</span> <span class="co">// Auto-submit the form</span></span>
 <span id="cb2-7"><a href="#cb2-7" aria-hidden="true" tabindex="-1"></a><span class="dt">&lt;/</span><span class="kw">script</span><span class="dt">&gt;</span></span></code></pre></div>
   <p>When a victim who is logged into <code>bank.com</code> visits the
-  malicious page: 1. The attacker’s JavaScript automatically submits the
-  form to <code>bank.com</code> 2. The browser includes the victim’s
-  <code>bank.com</code> cookies with the request because cookies are
-  automatically included in cross-origin requests 3.
-  <code>bank.com</code> receives a valid request with valid
-  authentication cookies 4. The transfer executes using the victim’s
-  authenticated session</p>
+  malicious page:</p>
+  <ol type="1">
+  <li>The attacker’s JavaScript automatically submits the form to
+  <code>bank.com</code></li>
+  <li>The browser includes the victim’s <code>bank.com</code> cookies
+  with the request because cookies are automatically included in
+  cross-origin requests</li>
+  <li><code>bank.com</code> receives a valid request with valid
+  authentication cookies</li>
+  <li>The transfer executes using the victim’s authenticated
+  session</li>
+  </ol>
   <p>Importantly, this attack works <em>despite</em> the Same-Origin
   policy, because the attacker doesn’t need to be able to see the
   response from the forged request. They only need the side effects
@@ -154,14 +163,19 @@ code span.wa { color: #60a0b0; font-weight: bold; font-style: italic; } /* Warni
 <span id="cb3-6"><a href="#cb3-6" aria-hidden="true" tabindex="-1"></a>  }</span>
 <span id="cb3-7"><a href="#cb3-7" aria-hidden="true" tabindex="-1"></a>  <span class="co">// Process transfer...</span></span>
 <span id="cb3-8"><a href="#cb3-8" aria-hidden="true" tabindex="-1"></a>})<span class="op">;</span></span></code></pre></div>
-  <p>However, this is not a reliable defense because: 1. The
-  <code>Referer</code> header might be stripped by browsers or network
-  proxies for privacy reasons 2. Users or browser extensions might
-  disable sending the <code>Referer</code> header 3. Sites can opt out
-  of sending the <code>Referer</code> header using the
-  <code>Referrer-Policy</code> header 4. HTTP caches might serve cached
-  responses without checking the <code>Referer</code> 5. The header can
-  potentially be spoofed by attackers in some scenarios</p>
+  <p>However, this is not a reliable defense because:</p>
+  <ol type="1">
+  <li>The <code>Referer</code> header might be stripped by browsers or
+  network proxies for privacy reasons</li>
+  <li>Users or browser extensions might disable sending the
+  <code>Referer</code> header</li>
+  <li>Sites can opt out of sending the <code>Referer</code> header using
+  the <code>Referrer-Policy</code> header</li>
+  <li>HTTP caches might serve cached responses without checking the
+  <code>Referer</code></li>
+  <li>The header can potentially be spoofed by attackers in some
+  scenarios</li>
+  </ol>
   <h3 id="samesite-cookies"><code>SameSite</code> Cookies</h3>
   <p>A more robust solution is to use the <code>SameSite</code> cookie
   attribute, which tells browsers when they should include cookies in
@@ -187,10 +201,13 @@ code span.wa { color: #60a0b0; font-weight: bold; font-style: italic; } /* Warni
   <code>bank.com</code> cookies when <code>attacker.com</code> submits
   the form.</p>
   <p>Some legitimate use cases might require <code>SameSite=None</code>
-  (which must be paired with <code>Secure</code>): - Social media embeds
-  (like Facebook comments) - Third-party payment processing widgets -
-  Single sign-on across different subdomains - Third-party API
-  integrations</p>
+  (which must be paired with <code>Secure</code>):</p>
+  <ul>
+  <li>Social media embeds (like Facebook comments)</li>
+  <li>Third-party payment processing widgets</li>
+  <li>Single sign-on across different subdomains</li>
+  <li>Third-party API integrations</li>
+  </ul>
   <p>If you need <code>SameSite=None</code>, you should implement
   additional protections like CSRF tokens.</p>
   <h3 id="csrf-tokens">CSRF Tokens</h3>
@@ -259,9 +276,13 @@ code span.wa { color: #60a0b0; font-weight: bold; font-style: italic; } /* Warni
   </ol>
   <p>Modern browsers default to <code>SameSite=Lax</code>, which helps
   prevent CSRF attacks. However, understanding CSRF remains important
-  for: - Supporting older browsers - Dealing with legacy systems -
-  Implementing cross-origin features safely - Understanding why certain
-  security measures exist</p>
+  for:</p>
+  <ul>
+  <li>Supporting older browsers</li>
+  <li>Dealing with legacy systems</li>
+  <li>Implementing cross-origin features safely</li>
+  <li>Understanding why certain security measures exist</li>
+  </ul>
   <p>In the next lesson, we’ll explore Cross-Site Scripting (XSS),
   another common web vulnerability that can bypass many CSRF
   protections.</p>

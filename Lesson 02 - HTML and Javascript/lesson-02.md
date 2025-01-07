@@ -9,6 +9,7 @@ The web platform combines several technologies that work together to create inte
 HTML (HyperText Markup Language) provides the structure and content of web pages using a system of tags that describe different types of content. Each piece of content is wrapped in opening and closing tags that describe its role in the document.
 
 For example, this text document:
+
 ```
 Introduction
 
@@ -19,6 +20,7 @@ Second, these fruits affect their smell
 ```
 
 Can be marked up with HTML to indicate its structure:
+
 ```html
 <h1>Introduction</h1>
 
@@ -34,6 +36,7 @@ Can be marked up with HTML to indicate its structure:
 ```
 
 A complete HTML document includes additional required structure:
+
 ```html
 <!doctype html>
 <html lang="en">
@@ -94,6 +97,7 @@ URLs (Uniform Resource Locators) specify how to find resources on the web. They 
 - Fragment (e.g., `#section1`)
 
 URLs can be specified in several ways:
+
 1. Full URL: `https://example.com/news/2024/`
 2. Protocol-relative: `//example.com/news/2024/` (inherits protocol from current page)
 3. Root-relative: `/news/2024/` (relative to domain root)
@@ -123,6 +127,7 @@ CSS can be used for security exploits when combined with other vulnerabilities, 
 ## JavaScript: Programming the Web
 
 JavaScript allows websites to be interactive and dynamic. It can:
+
 - Modify the page content (DOM manipulation)
 - Respond to user actions (event handling)
 - Make network requests (AJAX/fetch)

@@ -88,10 +88,14 @@ code span.wa { color: #60a0b0; font-weight: bold; font-style: italic; } /* Warni
   that will be executed by the server, without properly separating data
   from code.</p>
   <p>Server-side code injection is particularly dangerous because
-  attackers can: - Read or modify any data in the application’s database
-  - Execute arbitrary commands on the server - Access internal network
-  resources - Move laterally to attack other systems - Steal or destroy
-  sensitive data</p>
+  attackers can:</p>
+  <ul>
+  <li>Read or modify any data in the application’s database</li>
+  <li>Execute arbitrary commands on the server</li>
+  <li>Access internal network resources</li>
+  <li>Move laterally to attack other systems</li>
+  <li>Steal or destroy sensitive data</li>
+  </ul>
   <p>This lesson covers two major types of server-side code injection:
   subprocess command injection and SQL injection.</p>
   <h2 id="subprocess-command-injection">Subprocess Command
@@ -203,8 +207,11 @@ password: &#39; OR &#39;1&#39;=&#39;1</code></pre>
   class="sourceCode sql"><code class="sourceCode sql"><span id="cb10-1"><a href="#cb10-1" aria-hidden="true" tabindex="-1"></a><span class="kw">INSERT</span> <span class="kw">INTO</span> logs</span>
 <span id="cb10-2"><a href="#cb10-2" aria-hidden="true" tabindex="-1"></a>  <span class="kw">VALUES</span> (<span class="ot">&quot;Login attempt from x&quot;</span>);</span>
 <span id="cb10-3"><a href="#cb10-3" aria-hidden="true" tabindex="-1"></a>  <span class="kw">DROP</span> <span class="kw">TABLE</span> users; <span class="co">--&quot;)</span></span></code></pre></div>
-  <p>This executes two queries: 1. Insert a log entry 2. Delete the
-  entire users table</p>
+  <p>This executes two queries:</p>
+  <ol type="1">
+  <li>Insert a log entry</li>
+  <li>Delete the entire users table</li>
+  </ol>
   <h2 id="defense-use-parameterized-queries">Defense: Use Parameterized
   Queries</h2>
   <p>Never build queries using string concatenation with untrusted

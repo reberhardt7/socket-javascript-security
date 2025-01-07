@@ -5,6 +5,7 @@
 While client-side vulnerabilities like XSS primarily affect individual users, server-side code injection vulnerabilities can compromise entire applications and their data. These vulnerabilities occur when an application takes user input and combines it with code that will be executed by the server, without properly separating data from code.
 
 Server-side code injection is particularly dangerous because attackers can:
+
 - Read or modify any data in the application's database
 - Execute arbitrary commands on the server
 - Access internal network resources
@@ -141,6 +142,7 @@ INSERT INTO logs
 ```
 
 This executes two queries:
+
 1. Insert a log entry
 2. Delete the entire users table
 

@@ -135,13 +135,19 @@ code span.wa { color: #60a0b0; font-weight: bold; font-style: italic; } /* Warni
   term “site” isn’t specifically defined, and reasonable people might
   disagree about where the boundary of a “site” is, so let’s define
   “origin” as a specific technical term.</p>
-  <p>An origin is defined by three components: 1. Protocol (e.g.,
-  http:// or https://) 2. Hostname (e.g., example.com) 3. Port number
-  (e.g., :443)</p>
+  <p>An origin is defined by three components:</p>
+  <ol type="1">
+  <li>Protocol (e.g., http:// or https://)</li>
+  <li>Hostname (e.g., example.com)</li>
+  <li>Port number (e.g., :443)</li>
+  </ol>
   <p>For example, in the URL
-  <code>https://example.com:443/path/page.html</code>: - Protocol:
-  <code>https://</code> - Hostname: <code>example.com</code> - Port:
-  <code>443</code></p>
+  <code>https://example.com:443/path/page.html</code>:</p>
+  <ul>
+  <li>Protocol: <code>https://</code></li>
+  <li>Hostname: <code>example.com</code></li>
+  <li>Port: <code>443</code></li>
+  </ul>
   <p>Note that the path (<code>/path/page.html</code>) is NOT part of
   the origin.</p>
   <p>Two URLs have the same origin only if ALL three components match

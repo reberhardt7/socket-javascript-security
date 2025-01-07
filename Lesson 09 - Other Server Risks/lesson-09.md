@@ -7,6 +7,7 @@ Previous lessons covered major classes of web vulnerabilities like XSS, CSRF, an
 ## Server-Side Request Forgery (SSRF)
 
 Server-Side Request Forgery (SSRF) occurs when attackers can cause the server to send requests to arbitrary URLs. This is particularly dangerous in cloud environments because:
+
 1. The server might have access to other internal services, such as sensitive databases, that aren't meant to be publicly accessible
 2. Internal services typically have minimal security because they assume requests only come from trusted sources
 3. Network firewalls and access controls don't protect against requests coming from within the network
@@ -127,6 +128,7 @@ SSRF vulnerabilities can be prevented through multiple layers of defense:
 ## Regular Expression Denial of Service (ReDoS)
 
 Regular Expression Denial of Service (ReDoS) occurs when a regular expression can take exponential time to match certain inputs. This vulnerability is particularly severe in Node.js for several reasons:
+
 1. Node.js processes regex matching on the main event loop, so a slow regex blocks ALL requests to the server
 2. JavaScript's regex engine uses backtracking, which can lead to exponential matching time
 3. Many Node.js applications use regex for input validation, making this a common attack vector

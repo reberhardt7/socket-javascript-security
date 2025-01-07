@@ -100,11 +100,15 @@ code span.wa { color: #60a0b0; font-weight: bold; font-style: italic; } /* Warni
   have relatively few downloads (often under 50), an attacker only needs
   to trick one person into installing their package in order to execute
   an attack.</p>
-  <p>When a malicious package is installed, an attacker can: -
-  Exfiltrate data from the production application (stealing environment
-  variables, secrets, etc.) - Inject cryptocurrency miners - Execute
-  ransomware - Inject backdoors into the application - Install malware
-  on developers’ local machines</p>
+  <p>When a malicious package is installed, an attacker can:</p>
+  <ul>
+  <li>Exfiltrate data from the production application (stealing
+  environment variables, secrets, etc.)</li>
+  <li>Inject cryptocurrency miners</li>
+  <li>Execute ransomware</li>
+  <li>Inject backdoors into the application</li>
+  <li>Install malware on developers’ local machines</li>
+  </ul>
   <h2 id="supply-chain-attack-vectors">Supply chain attack vectors</h2>
   <p>There are several different ways that an attacker might get
   malicious code included in an application.</p>
@@ -183,13 +187,17 @@ code span.wa { color: #60a0b0; font-weight: bold; font-style: italic; } /* Warni
   small number of packages directly, but if those packages themselves
   use many dependencies, then in total, the project might depend on a
   large number of packages transitively.</p>
-  <p>The following tips may help with minimizing dependencies: * When
-  choosing libraries, prefer libraries that have a smaller number of
-  dependencies * Run tools like <a
+  <p>The following tips may help with minimizing dependencies:</p>
+  <ul>
+  <li>When choosing libraries, prefer libraries that have a smaller
+  number of dependencies</li>
+  <li>Run tools like <a
   href="https://www.npmjs.com/package/depcheck">depcheck</a> to prune
-  unused dependencies from <code>package.json</code> * Run tools like <a
+  unused dependencies from <code>package.json</code></li>
+  <li>Run tools like <a
   href="https://socket.dev/blog/introducing-socket-optimize">socket-optimize</a>
-  to reduce the count of transitive dependencies</p>
+  to reduce the count of transitive dependencies</li>
+  </ul>
   <h3 id="use-dependency-scanning-and-monitoring-tools">Use Dependency
   Scanning and Monitoring Tools</h3>
   <p>Node.js provides an <code>npm audit</code> command to check for

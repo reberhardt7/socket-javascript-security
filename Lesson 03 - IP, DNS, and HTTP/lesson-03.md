@@ -69,6 +69,7 @@ Accept-Language: en-US,en
 ```
 
 The request line specifies:
+
 * A [*request method*](https://developer.mozilla.org/en-US/docs/Web/HTTP/Methods), e.g. GET for fetching data or POST for uploading or modifying data
 * A *URL path* indicating the resource we are requesting
 * The HTTP protocol version
@@ -92,6 +93,7 @@ Date: Wed, 11 Dec 2024 03:48:35 GMT
 ```
 
 The _response line_ specifies:
+
 * The HTTP protocol version
 * An HTTP [_status_](https://developer.mozilla.org/en-US/docs/Web/HTTP/Status)
 

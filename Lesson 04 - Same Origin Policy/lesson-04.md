@@ -26,11 +26,13 @@ A [URL](https://developer.mozilla.org/en-US/docs/Learn/Common_questions/Web_mech
 Many different URLs would fall under the umbrella of a website. The term "site" isn't specifically defined, and reasonable people might disagree about where the boundary of a "site" is, so let's define "origin" as a specific technical term.
 
 An origin is defined by three components:
+
 1. Protocol (e.g., http:// or https://)
 2. Hostname (e.g., example.com)
 3. Port number (e.g., :443)
 
 For example, in the URL `https://example.com:443/path/page.html`:
+
 - Protocol: `https://`
 - Hostname: `example.com`
 - Port: `443`
