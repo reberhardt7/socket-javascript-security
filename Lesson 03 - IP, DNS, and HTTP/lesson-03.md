@@ -1,8 +1,8 @@
-# Lecture 1: Fundamentals of IP, DNS, and HTTP
+# Lesson 3: Fundamentals of IP, DNS, and HTTP
 
 ## Introduction
 
-This lecture covers three core technologies that make the web possible: IP addresses, DNS (Domain Name System), and HTTP (Hypertext Transfer Protocol). These technologies work together to enable every web interaction, from loading a simple webpage to streaming video content.
+This lesson covers three core technologies that make the web possible: IP addresses, DNS (Domain Name System), and HTTP (Hypertext Transfer Protocol). These technologies work together to enable every web interaction, from loading a simple webpage to streaming video content.
 
 ## 1. IP Addresses: The Internet's Street Addresses
 

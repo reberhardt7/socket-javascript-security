@@ -427,7 +427,7 @@ Content-Security-Policy:
 
 ### 4. Trusted Types
 
-[Trusted Types](https://developer.mozilla.org/en-US/docs/Web/API/Trusted_Types_API) is a new browser security feature that enforces explicit sanitization before using dangerous APIs like `innerHTML` or `eval()`. To use it:
+[Trusted Types](https://developer.mozilla.org/en-US/docs/Web/API/Trusted_Types_API) is a new, experimental browser security feature that enforces explicit sanitization before using dangerous APIs like `innerHTML` or `eval()`. It is not widely available yet, but is under active development. To use it:
 
 1. Enable it in your CSP header:
 ```http

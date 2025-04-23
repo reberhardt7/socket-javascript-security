@@ -96,7 +96,7 @@ To reiterate, browsers aim to allow any site -- even malicious ones -- to:
 
 This flexibility, while empowering for developers, is a significant challenge for secure implementation.
 
-Despite these challenges, the web has proven to be fairly robust. As noted by Ilya Grigorik, a Google web performance engineer:
+Despite these challenges, the web has proven to be fairly robust. As noted by Ilya Grigorik, a former Google web performance engineer:
 
 > "It's all too easy to criticize, lament, and create paranoid scenarios about the 'unsound security foundations' of the web. Truth is, all of that criticism is true, and yet the web has proven to be an incredibly robust platform."
 

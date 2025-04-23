@@ -113,7 +113,7 @@ If you need `SameSite=None`, you should implement additional protections like CS
 
 ### CSRF Tokens
 
-A CSRF token is a random value that your server generates and includes in forms. When the form is submitted, the server verifies that the token in the request matches the one it generated. Since an attacker can't predict the CSRF token, and can't read it from the HTML on a page due to Same-Origin Policy, they will be able to include the correct token in a forged form submission.
+A CSRF token is a random value that your server generates and includes in forms. When the form is submitted, the server verifies that the token in the request matches the one it generated. Since an attacker can't predict the CSRF token, and can't read it from the HTML on a page due to Same-Origin Policy, they will not be able to include the correct token in a forged form submission.
 
 Here's how to implement CSRF tokens:
 
