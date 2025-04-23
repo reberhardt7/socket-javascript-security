@@ -42,6 +42,7 @@ However, at the time, **Chrome, Safari, and Internet Explorer did not implement 
 By programmatically generating subdomains (e.g., `1.example.com`, `2.example.com`, `3.example.com`, etc.) and using hidden iframes to load them, a malicious script could quickly fill the user's hard drive. You can explore this concept at [`filldisk.com`](http://www.filldisk.com/).
 
 ![](https://lh7-rt.googleusercontent.com/docsz/AD_4nXc9CowJPp93sbgVp2NTv3eiTBndPFNiY-bsKAuGhQ_Jnuwi80m7GyH93MKDwE21k9Bpg4yF0A9mlPkwL1V6i8nbOwDskk4NDWiHr33GruJkd5gdVVoQuv2eGe5xRg8KbWw9LCflKBXssqAFkJlpuQgBZvQW?key=zmFH9WJhsKq4JjZIdGkBXA)
+
 This attack was simple yet fun to execute, and it highlighted the impact of small implementation details. While this issue has since been fixed in all major browsers, it was a perfect example of how a security mindset can lead to significant findings.
 
 ### Clickjacking with invisible frames
